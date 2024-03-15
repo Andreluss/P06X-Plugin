@@ -37,7 +37,7 @@
 
         public const string REWIRED_LEFT_BUMPER = "Left Bumper";
 
-        public static Player Controls => Singleton<RInput>.Instance.GetFieldValue<Player>("P");
+        public static Player Controls => Singleton<RInput>.Instance.Get<Player>("P");
 
         public static bool IsControlAxisPastThreshold(string analog, string digital, double threshold)
         {
