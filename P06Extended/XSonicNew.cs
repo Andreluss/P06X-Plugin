@@ -203,7 +203,7 @@
                                 SonicNew.State.Jump, SonicNew.State.Air,
                                 SonicNew.State.SlowFall, SonicNew.State.AfterHoming, SonicNew.State.TrickJump) ||
                              __instance.Get<SonicNew.State>("PlayerState") == SonicNew.State.BoundAttack 
-                                && __instance.Get<float>("BoundState") != 42;
+                                && __instance.Get<int>("BoundState") != 42;
 
                 return cond1 && cond2;
             }
