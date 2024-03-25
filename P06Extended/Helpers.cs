@@ -88,6 +88,8 @@
          * 
          */
 
+        /* TODO - cache also the Type - and allow for separate instance reloading */
+
         private object _instance;
         private Dictionary<string, FieldInfo> _fieldsCache = new Dictionary<string, FieldInfo>();
 

@@ -57,6 +57,7 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\Sonic the Hedgehog (P-06)\Sonic the Hedgehog_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\Sonic the Hedgehog (P-06)\Sonic the Hedgehog_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
