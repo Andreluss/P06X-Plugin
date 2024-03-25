@@ -28,6 +28,10 @@ namespace P06X.Helpers
             obj.GetType().GetField(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)?.SetValue(obj, value);
             return obj.Get<T>(name);
         }
+        public static T GetPropValue<T>(this object src, string propName)
+        {
+            return (T)src.GetType().GetProperty(propName, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).GetValue(src, null);
+        }
 
         public static MethodInfo GetMethod(this object obj, string methodName)
         {

@@ -5,7 +5,6 @@
     using UnityEngine;
     using Helpers;
     using UnityEngine.Assertions;
-    using Rewired;
 
     public class XSonicNew : MonoBehaviour // should be a generic character patch subclass (for the future) - todo
     {
