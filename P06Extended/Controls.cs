@@ -4052,7 +4052,8 @@ namespace P06X
             this.Value = initValue;
         }
 
-        public event Action<T> OnChangeValue;        public T Value
+        public event Action<T> OnChangeValue;
+        public T Value
         {
             get
             {

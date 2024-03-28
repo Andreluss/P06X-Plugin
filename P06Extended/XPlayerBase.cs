@@ -214,7 +214,7 @@
             {
                 if (XI == null) return;
                 Assert.IsTrue(__instance == I.I, "PlayerBase instance mismatch!");
-
+                 
                 // Check the possible state changes:
                 if (CanWallJumpStick())
                 {
