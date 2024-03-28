@@ -7,7 +7,7 @@
     <ProjectGuid>{4FAF91A3-3365-44F1-901F-772C62D6AE68}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>P06Extended</RootNamespace>
+    <RootNamespace>P06X</RootNamespace>
     <AssemblyName>P06Extended</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

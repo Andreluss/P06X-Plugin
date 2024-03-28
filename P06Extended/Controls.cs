@@ -510,6 +510,13 @@ namespace P06X
                 }, 2f);
             }
             UnityEngine.Object.Destroy(CurrentPlayer.gameObject);
+
+            // Update target references in amigos (if any)
+            var amigos = FindObjectsOfType<AmigoAIBase>();
+            foreach (var amigo in amigos)
+            {
+                amigo.Set<PlayerBase>("FollowTarget", component);
+            }
         }
 
         private void ResetLUA()

@@ -4,6 +4,7 @@
     using UnityEngine;
     using Helpers;
     using UnityEngine.Assertions;
+    using System;
 
     public class XPlayerBase : MonoBehaviour
     {
@@ -16,6 +17,9 @@
             public ReflectionWrapper<bool> Boo;
             public ReflectionWrapper<RaycastHit> RcH;
             public ReflectionWrapper<Quaternion> Qua;
+            public PlayerCamera Camera;
+            public StageManager StageManager;
+            public ReflectionWrapper<Vector3> Vec;
             // when adding new ReflectionWrapper, don't forget to add it to the constructor!!!
             // ...
             public IPlayerBase(PlayerBase playerBase)
@@ -26,6 +30,9 @@
                 Boo = new ReflectionWrapper<bool>(I);
                 RcH = new ReflectionWrapper<RaycastHit>(I);
                 Qua = new ReflectionWrapper<Quaternion>(I);
+                Camera = I.Get<PlayerCamera>("Camera");
+                StageManager = I.Get<StageManager>("StageManager");
+                Vec = new ReflectionWrapper<Vector3>(I);
                 // ...
             }
         }
@@ -149,6 +156,190 @@
         }
 
 
+        // -------------------- V-Dodge --------------------
+        public static class VDodge
+        {
+            public static bool IsVDodging;
+            
+            public static int Dir;
+            public static string _ButtonName;
+            public static bool _ButtonReleased;
+
+            public static float Time;
+            public static float EndTime;
+
+            public static bool Stopped;
+            internal static float PreDodgeCurSpeed;
+
+            public static int _csc_fix_mode = 2;
+            public static Vector3 MaxxVel;
+            public static Vector3 CurrVel;
+
+            public static Quaternion RotA;
+            public static Quaternion RotB;
+
+            public static bool _fwdacc = true;
+            public static float VelMult = 0.5f;
+            public static float Speed = 18f;
+            public static float RotDuration = 0.1f;
+            public static float RotBackDuration = 0.03f;
+            public static float AccDuration = 0.03f;
+            public static float Dmin = 0.15f;
+            public static float Dmax = 0.4f;
+        }
+        public Vector3 RealRight()
+        {
+            return Vector3.ProjectOnPlane(Vector3.Cross(I.RcH["RaycastHit"].normal, I.I.transform.forward), I.RcH["RaycastHit"].normal).normalized;
+        }
+        [HarmonyPatch(typeof(Rewired.Player), "GetButton", new Type[] { typeof(string) })]
+        public class Rewired_Player_GetButton
+        {
+            public static void Postfix(Rewired.Player __instance, ref bool __result, string actionName)
+            {
+                // Take away (hide from camera script) the button press if it's being used as a dodge trigger 
+                if (actionName != VDodge._ButtonName || VDodge._ButtonReleased) return;
+
+                // If the button have been released, stop blocking the button.
+                if (!__result)
+                {
+                    VDodge._ButtonReleased = true;
+                    return;
+                }
+
+                // Otherwise (when the button is still pressed), block it.
+                __result = false;
+            }
+        }
+        public void StateVDodgeStart()
+        {
+            I.I.SetState("Path");
+            I.Boo["LockControls"] = true;
+            VDodge.IsVDodging = true;
+            VDodge._ButtonReleased = false;
+            VDodge.Time = Time.time;
+            VDodge.EndTime = VDodge.Time + 99999f;
+            VDodge.Stopped = false;
+            VDodge.PreDodgeCurSpeed = I.Flt["CurSpeed"];
+            if (I.StageManager._Stage == StageManager.Stage.csc && I.StageManager.StageSection == StageManager.Section.E && I.I.GetPrefab("sonic_fast"))
+            {
+                if (VDodge._csc_fix_mode == 1)
+                {
+                    bool flag = Vector3.Dot(I.Camera.transform.forward, I.I._Rigidbody.velocity) < 0f;
+                    Vector3 vector = Vector3.ProjectOnPlane(I.Camera.transform.forward * (flag ? -1 : 1), I.RcH["RaycastHit"].normal);
+                    I.I.transform.forward = vector;
+
+                    XDebug.Comment("Adjust forward rotation to camera automatically");
+                    XDebug.Comment("This works only in Crisis City E --> to prevent sudden flying off the road");
+                    if (Vector3.Angle(vector, Vector3.ProjectOnPlane(base.transform.forward, I.RcH["RaycastHit"].normal)) > 5f) {
+                        XDebug.Comment(string.Format("<color=#ee6600>Adjusted direction by {0} deg</color>", Vector3.Angle(vector, Vector3.ProjectOnPlane(base.transform.forward, I.RcH["RaycastHit"].normal))));
+                    }
+                }
+                else if (VDodge._csc_fix_mode == 2)
+                {
+                    I.I.transform.forward = Vector3.ProjectOnPlane(new Vector3(-1f, 0f, 0f), I.RcH["RaycastHit"].normal).normalized;
+                }
+            }
+
+            Vector3 normalized = Vector3.ProjectOnPlane(Vector3.Cross(I.Vec["UpMeshRotation"], I.Vec["ForwardMeshRotation"]), I.RcH["RaycastHit"].normal).normalized;
+            VDodge.MaxxVel = RealRight() * (float)VDodge.Dir * VDodge.Speed;
+            I.Vec["AirMotionVelocity"] = I.I._Rigidbody.velocity;
+            if (!VDodge._fwdacc)
+            {
+                I.I._Rigidbody.velocity = I.Vec["AirMotionVelocity"] * VDodge.VelMult;
+            }
+            VDodge.RotA = I.Qua["GeneralMeshRotation"];
+            VDodge.RotB = I.Qua["GeneralMeshRotation"] * Quaternion.Euler(0f, 0f, (float)(-30 * VDodge.Dir));
+            I.I.Animator.CrossFadeInFixedTime("Light Dash", 0.04f); // TODO: check for each player  
+            XSingleton<XEffects>.Instance.CreateDodgeFX();
+            //I.I.Audio.PlayOneShot(/*XSingleton<XDebug>.Instance.DodgeClipFull*/"DodgeClipFull", I.I.Audio.volume * 1.2f);
+        }
+        public void StateVDodge()
+        {
+            // this is managed by the Rewired_Player_GetButton patch
+            //if (!XInput.Controls.GetButton(VDodge._ButtonName)) {
+            //    VDodge._ButtonReleased = true;
+            //}
+
+            if (!VDodge.Stopped)
+            {
+                float elapsed = Time.time - VDodge.Time;
+                if (elapsed >= VDodge.Dmax - VDodge.AccDuration || (elapsed >= VDodge.Dmin - VDodge.AccDuration && VDodge._ButtonReleased))
+                {
+                    VDodge.Stopped = true;
+                    VDodge.EndTime = Time.time + VDodge.AccDuration;
+                }
+            }
+
+            I.Qua["GeneralMeshRotation"] = Quaternion.LookRotation(I.Vec["ForwardMeshRotation"], I.Vec["UpMeshRotation"]);
+            VDodge.RotA = I.Qua["GeneralMeshRotation"];
+            VDodge.RotB = I.Qua["GeneralMeshRotation"] * Quaternion.Euler(0f, 0f, -30f * (float)VDodge.Dir);
+            // Start rotating to the side or back to original rotation before the dodge 
+            // TODO: check above assignmetns, make no sense to me
+            if (Time.time - VDodge.Time <= VDodge.RotDuration)
+            {
+                I.Qua["GeneralMeshRotation"] = Quaternion.Slerp(VDodge.RotA, VDodge.RotB, (Time.time - VDodge.Time) / VDodge.RotDuration);
+            }
+            else if (VDodge.EndTime - Time.time <= VDodge.RotBackDuration)
+            {
+                I.Qua["GeneralMeshRotation"] = Quaternion.Slerp(VDodge.RotB, VDodge.RotA, 1f - (VDodge.EndTime - Time.time) / VDodge.RotBackDuration);
+            }
+            else
+            {
+                I.Qua["GeneralMeshRotation"] = VDodge.RotB;
+            }
+            
+            VDodge.MaxxVel = RealRight() * VDodge.Dir * VDodge.Speed;
+            
+            float num2;
+            if (Time.time - VDodge.Time <= VDodge.AccDuration)
+            {
+                VDodge.CurrVel = Vector3.Slerp(Vector3.zero, VDodge.MaxxVel, (Time.time - VDodge.Time) / VDodge.AccDuration);
+                num2 = Mathf.Lerp(1f, VDodge.VelMult, (Time.time - VDodge.Time) / VDodge.AccDuration);
+            }
+            else if (VDodge.EndTime - Time.time <= VDodge.AccDuration)
+            {
+                VDodge.CurrVel = Vector3.Slerp(VDodge.MaxxVel, Vector3.zero, 1f - (VDodge.EndTime - Time.time) / VDodge.AccDuration);
+                num2 = Mathf.Lerp(VDodge.VelMult, 1f, 1f - (VDodge.EndTime - Time.time) / VDodge.AccDuration);
+            }
+            else
+            {
+                VDodge.CurrVel = VDodge.MaxxVel;
+                num2 = VDodge.VelMult;
+            }
+
+            I.I.transform.rotation = Quaternion.FromToRotation(I.I.transform.up, I.RcH["RaycastHit"].normal) * I.I.transform.rotation;
+            I.Vec["AirMotionVelocity"] = Vector3.ProjectOnPlane(I.I.transform.forward, I.RcH["RaycastHit"].normal) * VDodge.PreDodgeCurSpeed;
+            if (VDodge._fwdacc)
+            {
+                I.I._Rigidbody.velocity = I.Vec["AirMotionVelocity"] * num2 + VDodge.CurrVel;
+            }
+            else
+            {
+                I.I._Rigidbody.velocity = I.Vec["AirMotionVelocity"] * VDodge.VelMult + VDodge.CurrVel;
+            }
+
+            I.Camera.transform.position += VDodge.CurrVel * Time.deltaTime;
+            if (Time.time >= VDodge.EndTime)
+            {
+                XDebug.Comment("|| Vector3.Dot(base.transform.right * (float)this.X_DodgeDir, this._Rigidbody.velocity) < 0.1f)");
+                I.I.StateMachine.ChangeState(I.I.GetState("StateAir")); // or StateGround
+            }
+        }
+        public void StateVDodgeEnd()
+        {
+            VDodge.IsVDodging = false;
+            I.Boo["LockControls"] = false;
+            // here's the original code: (please rewrite it to use the VDodge class members and reflection wrappers and I.I. instance instead of base. ... etc.)
+            // rewrite it:
+            VDodge.EndTime = Time.time;
+            I.Boo["LockControls"] = false;
+            I.Flt["CurSpeed"] = VDodge.PreDodgeCurSpeed;
+            I.I._Rigidbody.velocity = I.I.transform.forward * I.Vec["AirMotionVelocity"].magnitude;
+            XSingleton<XEffects>.Instance.DestroyDodgeFX();
+        }
+
+
+
         // ------------------------------- Helpers -------------------------------
         public bool HasGroundBelow(float maxDist)
         {
@@ -170,7 +361,7 @@
         [HarmonyPatch(typeof(PlayerBase), nameof(PlayerBase.FixedUpdate))]
         public class PlayerBase_FixedUpdate
         {
-             public static bool CanWallJumpStick()
+            public static bool CanWallJumpStick()
             {
                 if (!CheckGameState()) return false;
                 if (I.I.GetPrefab("knuckles") || I.I.GetPrefab("rouge")) return false; // this will be done separately in Knuckles and Rouge classes
@@ -189,7 +380,7 @@
 
                 if (I.I.GetState().IsInList("Jump", "Air", "AfterHoming", "Homing", "Fly", "Glide") &&
                     I.Boo["FrontalCollision"] && I.RcH["FrontalHit"].transform != null &&
-                    !Boost.IsBoosting &&  !XI.HasGroundBelow(WallJump.MinHeightAboveGround))
+                    !Boost.IsBoosting && !XI.HasGroundBelow(WallJump.MinHeightAboveGround))
                 {
                     if (((I.I.GetPrefab("knuckles") || I.I.GetPrefab("rouge")) && I.RcH["FrontalHit"].transform && I.RcH["FrontalHit"].transform.tag == "ClimbableWall") ||
                         I.I.GetPrefab("sonic_fast") || I.I.GetPrefab("snow_board"))
@@ -214,7 +405,7 @@
             {
                 if (XI == null) return;
                 Assert.IsTrue(__instance == I.I, "PlayerBase instance mismatch!");
-                 
+
                 // Check the possible state changes:
                 if (CanWallJumpStick())
                 {
@@ -235,6 +426,36 @@
                 return XInput.Controls.GetButtonDown("Button A");
             }
 
+            public static bool CanVDodge(ref int direction, ref string buttonName)
+            {
+                if (!CheckGameState()) return false;
+                if (VDodge.IsVDodging || Time.time <= VDodge.EndTime) return false;
+
+                // SonicNew has its own dodge, so skip. 
+                if (I.I.GetPrefab("sonic_new")) return false; 
+
+                // Optionally ensure the player is on the ground. 
+                //if (I.I.GetState() != "Ground") return false;
+
+                // Set the dodge direction info, based on the button pressed & camera direction.
+                float dot = Vector3.Dot(I.I.transform.forward, I.Camera.transform.forward);
+                if (XInput.Controls.GetButtonDown(XInput.REWIRED_RIGHT_BUMPER))
+                {
+                    direction = ((dot >= 0f) ? 1 : (-1));
+                    buttonName = XInput.REWIRED_RIGHT_BUMPER;
+                    // XSingleton<XDebug>.Instance.JustUsedLeftTrigger = true;
+                    return true;
+                }
+                else if (XInput.Controls.GetButtonDown(XInput.REWIRED_LEFT_BUMPER))
+                {
+                    direction = ((dot >= 0f) ? (-1) : 1);
+                    buttonName = XInput.REWIRED_LEFT_BUMPER;
+                    // XSingleton<XDebug>.Instance.JustUsedLeftTrigger = true;
+                    return true;
+                }
+                return false;
+            }
+
             public static void Postfix(PlayerBase __instance)
             {
                 if (XI == null) return;
@@ -245,11 +466,15 @@
                     I.Flt["CurSpeed"] = WallJump.JumpStrength;
                     I.I.transform.forward = WallJump.Normal;
                     // og note: weird hack to keep vector for jumping in direction opposite to the wall
-                    if (I.I._Rigidbody.velocity.y < 3f)
-                    {
+                    if (I.I._Rigidbody.velocity.y < 3f) {
                         I.I._Rigidbody.velocity += Vector3.up * (3f - I.I._Rigidbody.velocity.y);
                     }
                     I.I.StateMachine.ChangeState(I.I.GetState("StateJump"));
+                }
+
+                if (CanVDodge(ref VDodge.Dir, ref VDodge._ButtonName))
+                {
+                    I.I.StateMachine.ChangeState(XI.StateVDodge);
                 }
             }
         }

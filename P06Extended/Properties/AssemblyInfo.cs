@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using P06X;
 using System;
-[assembly: MelonInfo(typeof(P06X.Main), "P-06 Extended (plugin)", "1.8.0", "4ndrelus", "https://www.youtube.com/@4ndrelus/videos")]
+[assembly: MelonInfo(typeof(P06X.Main), "P-06 Extended (plugin)", "2.0.dev", "4ndrelus", "https://www.youtube.com/@4ndrelus/videos")]
 [assembly: MelonGame(null, null)]
 
 // General Information about an assembly is controlled through the following
