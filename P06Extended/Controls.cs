@@ -517,6 +517,12 @@ namespace P06X
             {
                 amigo.Set<PlayerBase>("FollowTarget", component);
             }
+
+            var enemies = FindObjectsOfType<EnemyBase>();
+            foreach (var enemy in enemies)
+            {
+                enemy.Set<GameObject>("Target", component.gameObject);
+            }
         }
 
         private void ResetLUA()
@@ -1547,7 +1553,7 @@ namespace P06X
 
         private List<LineRenderer> LRs;
 
-        public static bool DBG = false;
+        public static bool DBG = true;
 
         public static bool EXP = true;
 

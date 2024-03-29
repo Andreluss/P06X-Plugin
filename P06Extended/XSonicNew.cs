@@ -308,7 +308,7 @@
             Dodge.RotB = I.Qua["GeneralMeshRotation"] * Quaternion.Euler(Dodge.Dir * Dodge.RotAngles);
             I.PCa["Camera"].transform.position += II._Rigidbody.velocity * Time.deltaTime;
 
-            Dodge.NextTime = Time.time + 9999f;
+            Dodge.NextTime = Time.time + 2.2f;
             //II.Get<AudioSource>("Audio").PlayOneShot(/* DodgeClip */, II.Get<AudioSource>("Audio").volume * 1.5f);
         }
         public void StateDodge()
