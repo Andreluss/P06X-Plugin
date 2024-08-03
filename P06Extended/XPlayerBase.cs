@@ -6,7 +6,7 @@
     using UnityEngine.Assertions;
     using System;
 
-    public class XPlayerBase : MonoBehaviour
+    public partial class XPlayerBase : MonoBehaviour
     {
         public static XPlayerBase XI;
         public class IPlayerBase
@@ -369,6 +369,34 @@
             bool result = Physics.Raycast(I.I.transform.position, -I.I.transform.up, out raycastHit, maxDist, layerMask);
             return result;
         }
+        public static bool HasWaterBelow(float maxDist, out RaycastHit waterHit)
+        {
+            waterHit = default(RaycastHit);
+            foreach (RaycastHit raycastHit in Physics.RaycastAll(I.I.transform.position, -Vector3.up, maxDist))
+            {
+                if (raycastHit.transform.tag == "Water")
+                {
+                    waterHit = raycastHit;
+                    return true;
+                }
+            }
+            return false;
+        }
+        public static bool HasWaterBelow(float maxDist, ref Vector3 waterPosition)
+        {
+            RaycastHit[] array = Physics.RaycastAll(I.I.transform.position, -Vector3.up, maxDist);
+            bool flag = false;
+            foreach (RaycastHit raycastHit in array)
+            {
+                if (raycastHit.transform.tag == "Water")
+                {
+                    flag = true;
+                    waterPosition = raycastHit.point;
+                    break;
+                }
+            }
+            return flag;
+        }
         private static bool CheckGameState()
         {
             return GameManager.Instance.GameState != GameManager.State.Paused &&
@@ -476,6 +504,17 @@
                 return false;
             }
 
+            public static bool CanWaterRun()
+            {
+                if (!CheckGameState()) return false;
+                if (I.I.GetState() == "WaterRun") return false;
+                //if (I.I.GetPrefab("snow_board")) return false;
+
+                Vector3 vector = default(Vector3);
+                bool is_falling_and_fast_enough = I.I._Rigidbody.velocity.y < 0f && I.Flt["CurSpeed"] > WaterRun.MinActivationSpeed;
+                return is_falling_and_fast_enough && HasWaterBelow(WaterRun.YMaxWaterRaycastDist, ref vector);
+            }
+
             public static void Postfix(PlayerBase __instance)
             {
                 if (XI == null) return;
@@ -495,6 +534,11 @@
                 if (CanVDodge(ref VDodge.Dir, ref VDodge._ButtonName))
                 {
                     I.I.StateMachine.ChangeState(XI.StateVDodge);
+                }
+
+                if (CanWaterRun())
+                {
+                    I.I.StateMachine.ChangeState(XI.StateWaterRun);
                 }
             }
         }

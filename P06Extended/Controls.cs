@@ -14,11 +14,22 @@ using UnityEngine.SceneManagement;
 using System.Reflection;
 using P06X.Helpers;
 using TMPro;
+using System.Xml.Schema;
+using Harmony;
 
 namespace P06X
 {
     public class XDebug : XSingleton<XDebug>
     {
+        private void Awake()
+        {
+            this.CreateXCanvas();
+            SceneManager.sceneLoaded += this.OnSceneLoaded;
+            UnityEngine.Object.DontDestroyOnLoad(this);
+            Application.runInBackground = true;
+            XDebug.Comment("only here initializing XValues won't crash");
+            this.InitializeXValues();
+        }
         private void Start()
         {
             this.RealFixedDeltaTime = Time.fixedDeltaTime;
@@ -362,15 +373,6 @@ namespace P06X
             }
         }
 
-        private void Awake()
-        {
-            this.CreateXCanvas();
-            SceneManager.sceneLoaded += this.OnSceneLoaded;
-            UnityEngine.Object.DontDestroyOnLoad(this);
-            Application.runInBackground = true;
-            XDebug.Comment("only here initializing XValues won't crash");
-            this.InitializeXValues();
-        }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
@@ -525,55 +527,7 @@ namespace P06X
             }
         }
 
-        private void ResetLUA()
-        {
-            Assembly ass = Assembly.GetAssembly(typeof(SonicNew));
-
-            ass.GetType("STHLua.Sonic_New_Lua").Set("c_run_speed_max", 25f);
-
-            ass.GetType("STHLua.Sonic_New_Lua").Set("c_run_speed_max", 25f);
-            ass.GetType("STHLua.Sonic_New_Lua").Set("c_jump_run", 13f);
-            ass.GetType("STHLua.Sonic_New_Lua").Set("c_spindash_spd", 30f);
-            ass.GetType("STHLua.Sonic_New_Lua").Set("c_speedup_speed_max", 42f);
-            ass.GetType("STHLua.Sonic_Fast_Lua").Set("c_walk_speed_max", 55f);
-            ass.GetType("STHLua.Sonic_Fast_Lua").Set("c_run_speed_max", 80f);
-            ass.GetType("STHLua.Sonic_Fast_Lua").Set("c_lightdash_speed", 120f);
-            ass.GetType("STHLua.Sonic_Fast_Lua").Set("c_lightdash_mid_speed", 90f);
-            ass.GetType("STHLua.Sonic_Fast_Lua").Set("c_lightdash_mid_speed_super", 110f);
-            ass.GetType("STHLua.Tails_Lua").Set("c_run_speed_max", 16.5f);
-            ass.GetType("STHLua.Tails_Lua").Set("c_jump_run", 12f);
-            ass.GetType("STHLua.Tails_Lua").Set("c_flight_speed_max", 17f);
-            ass.GetType("STHLua.Tails_Lua").Set("c_speedup_speed_max", 25.5f);
-            ass.GetType("STHLua.Shadow_Lua").Set("c_run_speed_max", 23f);
-            ass.GetType("STHLua.Shadow_Lua").Set("c_speedup_speed_max", 38f);
-            ass.GetType("STHLua.Shadow_Lua").Set("c_jump_run", 11f);
-            ass.GetType("STHLua.Shadow_Lua").Set("c_spindash_spd", 28f);
-            ass.GetType("STHLua.Knuckles_Lua").Set("c_climb_speed", 7f);
-            ass.GetType("STHLua.Knuckles_Lua").Set("c_run_speed_max", 16.5f);
-            ass.GetType("STHLua.Knuckles_Lua").Set("c_speedup_speed_max", 25.5f);
-            ass.GetType("STHLua.Knuckles_Lua").Set("c_jump_run", 12f);
-            ass.GetType("STHLua.Knuckles_Lua").Set("c_flight_speed_max", 17f);
-            ass.GetType("STHLua.Omega_Lua").Set("c_run_speed_max", 20f);
-            ass.GetType("STHLua.Omega_Lua").Set("l_jump_run", 16f);
-            ass.GetType("STHLua.Omega_Lua").Set("c_speedup_speed_max", 30f);
-            ass.GetType("STHLua.Princess_Lua").Set("c_run_speed_max", 25f);
-            ass.GetType("STHLua.Princess_Lua").Set("c_speedup_speed_max", 42f);
-            ass.GetType("STHLua.Princess_Lua").Set("c_jump_run", 13f);
-            ass.GetType("STHLua.Rouge_Lua").Set("c_run_speed_max", 16.5f);
-            ass.GetType("STHLua.Rouge_Lua").Set("c_speedup_speed_max", 25.5f);
-            ass.GetType("STHLua.Rouge_Lua").Set("c_jump_run", 12f);
-            ass.GetType("STHLua.Rouge_Lua").Set("c_flight_speed_max", 17f);
-            ass.GetType("STHLua.Rouge_Lua").Set("c_climb_speed", 7f);
-            ass.GetType("STHLua.Silver_Lua").Set("c_run_speed_max", 16.5f);
-            ass.GetType("STHLua.Silver_Lua").Set("c_speedup_speed_max", 25.5f);
-            ass.GetType("STHLua.Silver_Lua").Set("c_jump_run", 12f);
-            ass.GetType("STHLua.Silver_Lua").Set("c_float_walk_speed", 18.5f);
-
-            ass.GetType("STHLua.Shadow_Lua").Set("c_homing_spd", 40f);
-            ass.GetType("STHLua.Sonic_New_Lua").Set("c_homing_spd", 40f);
-            ass.GetType("STHLua.Princess_Lua").Set("c_homing_spd", 40f);
-            //Sonic_New_Lua.c_homing_spd = (Shadow_Lua.c_homing_spd = (Princess_Lua.c_homing_spd = 40f));
-        }
+        
 
         private void LateUpdate()
         {
@@ -883,44 +837,44 @@ namespace P06X
             }, true);
             this.SMGround = new XValue<float>(delegate (float x)
             {
-                XDebug.CustomSpeedMultiplier.Ground = x;
-                XDebug.USING_CUSTOM_SPEEDS = true;
-                this.UpdateLUA();
+                CustomSpeedMultiplier.Ground = x;
+                USING_CUSTOM_SPEEDS = true;
+                CustomSpeedMultiplier.UpdateLUA();
                 this.Log(string.Format("<color=#d214fc>cstm_spd_ground</color> = {0}", x), 1.25f, 16f);
             }, 1f);
             this.SMAir = new XValue<float>(delegate (float x)
             {
-                XDebug.CustomSpeedMultiplier.Air = x;
-                XDebug.USING_CUSTOM_SPEEDS = true;
-                this.UpdateLUA();
+                CustomSpeedMultiplier.Air = x;
+                USING_CUSTOM_SPEEDS = true;
+                CustomSpeedMultiplier.UpdateLUA();
                 this.Log(string.Format("<color=#d214fc>cstm_spd_air</color> = {0}", x), 1.25f, 16f);
             }, 1f);
             this.SMSpindash = new XValue<float>(delegate (float x)
             {
-                XDebug.CustomSpeedMultiplier.Spindash = x;
-                XDebug.USING_CUSTOM_SPEEDS = true;
-                this.UpdateLUA();
+                CustomSpeedMultiplier.Spindash = x;
+                USING_CUSTOM_SPEEDS = true;
+                CustomSpeedMultiplier.UpdateLUA();
                 this.Log(string.Format("<color=#d214fc>cstm_spd_spindash</color> = {0}", x), 1.25f, 16f);
             }, 1f);
             this.SMFly = new XValue<float>(delegate (float x)
             {
-                XDebug.CustomSpeedMultiplier.Flying = x;
-                XDebug.USING_CUSTOM_SPEEDS = true;
-                this.UpdateLUA();
+                CustomSpeedMultiplier.Flying = x;
+                USING_CUSTOM_SPEEDS = true;
+                CustomSpeedMultiplier.UpdateLUA();
                 this.Log(string.Format("<color=#d214fc>cstm_spd_flying</color> = {0}", x), 1.25f, 16f);
             }, 1f);
             this.SMClimb = new XValue<float>(delegate (float x)
             {
                 XDebug.CustomSpeedMultiplier.Climbing = x;
                 XDebug.USING_CUSTOM_SPEEDS = true;
-                this.UpdateLUA();
+                CustomSpeedMultiplier.UpdateLUA();
                 this.Log(string.Format("<color=#d214fc>cstm_spd_climbing</color> = {0}", x), 1.25f, 16f);
             }, 1f);
             this.SMHoming = new XValue<float>(delegate (float x)
             {
                 XDebug.CustomSpeedMultiplier.Homing = x;
                 XDebug.USING_CUSTOM_SPEEDS = true;
-                this.UpdateLUA();
+                CustomSpeedMultiplier.UpdateLUA();
                 this.Log(string.Format("<color=#d214fc>cstm_spd_homing</color> = {0}", x), 1.25f, 16f);
             }, 1f);
             this.SMHomingAttackFasterBy = new XValue<float>(delegate (float x)
@@ -947,7 +901,7 @@ namespace P06X
                 this.SMHomingAttackFasterBy.Value = mul;
                 this.SMAfterHomingRotation.Value = mul;
                 this.Log(string.Format("<color=#ff9500>Speed Multiplier</color>: {0}", this.SpeedMultiplier.ToString("0.000")), 1.5f, 18f);
-                this.UpdateLUA();
+                CustomSpeedMultiplier.UpdateLUA();
                 XDebug.USING_CUSTOM_SPEEDS = false;
             }, 1f);
             this.Boost_BaseSpeed = new XValue<float>(delegate (float spd)
@@ -989,95 +943,8 @@ namespace P06X
             }
             this.Log("<color=#ee0000>Section</color> \"" + section + "\" <color=#ee0000>doesn't exist</color>!", 3f, 16f);
         }
+        
 
-        private void UpdateLUA()
-        {
-            XDebug.Comment("[pending]");
-            /*
-            this.ResetLUA();
-            Sonic_New_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Sonic_New_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Sonic_Fast_Lua.c_walk_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Sonic_Fast_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Tails_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Tails_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Shadow_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Shadow_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Knuckles_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Knuckles_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Omega_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Omega_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Princess_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Princess_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Rouge_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Rouge_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Silver_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Silver_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
-            Silver_Lua.c_float_walk_speed *= XDebug.CustomSpeedMultiplier.Ground;
-            Sonic_New_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
-            Sonic_Fast_Lua.c_lightdash_speed *= XDebug.CustomSpeedMultiplier.Air;
-            Sonic_Fast_Lua.c_lightdash_mid_speed *= XDebug.CustomSpeedMultiplier.Air;
-            Sonic_Fast_Lua.c_lightdash_mid_speed_super *= XDebug.CustomSpeedMultiplier.Air;
-            Tails_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
-            Shadow_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
-            Knuckles_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
-            Omega_Lua.l_jump_run *= XDebug.CustomSpeedMultiplier.Air;
-            Princess_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
-            Rouge_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
-            Silver_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
-            Sonic_New_Lua.c_spindash_spd *= XDebug.CustomSpeedMultiplier.Spindash;
-            Shadow_Lua.c_spindash_spd *= XDebug.CustomSpeedMultiplier.Spindash;
-            Tails_Lua.c_flight_speed_max *= XDebug.CustomSpeedMultiplier.Flying;
-            Shadow_Lua.c_spindash_spd *= XDebug.CustomSpeedMultiplier.Flying;
-            Knuckles_Lua.c_flight_speed_max *= XDebug.CustomSpeedMultiplier.Flying;
-            Rouge_Lua.c_flight_speed_max *= XDebug.CustomSpeedMultiplier.Flying;
-            Knuckles_Lua.c_climb_speed *= XDebug.CustomSpeedMultiplier.Climbing;
-            Rouge_Lua.c_climb_speed *= XDebug.CustomSpeedMultiplier.Climbing;
-            Sonic_New_Lua.c_homing_spd *= XDebug.CustomSpeedMultiplier.Homing;
-            Shadow_Lua.c_homing_spd *= XDebug.CustomSpeedMultiplier.Homing;
-            Princess_Lua.c_homing_spd *= XDebug.CustomSpeedMultiplier.Homing;
-            if (this.ASCLuaRecalc.Value)
-            {
-                this.RecalcLua();
-            }
-            */
-        }
-
-        private void RecalcLua()
-        {
-            /*
-            Sonic_New_Lua.c_run_acc = (Sonic_New_Lua.c_run_speed_max - Sonic_New_Lua.c_walk_speed_max) / Sonic_New_Lua.l_run_acc;
-            Sonic_New_Lua.c_speedup_acc = (Sonic_New_Lua.c_speedup_speed_max - Sonic_New_Lua.c_walk_speed_max) / Sonic_New_Lua.l_speedup_acc;
-            Sonic_New_Lua.c_bound_jump_spd_0 = Common_Lua.HeightToSpeed(Sonic_New_Lua.l_bound_jump_height0);
-            Sonic_New_Lua.c_bound_jump_spd_1 = Common_Lua.HeightToSpeed(Sonic_New_Lua.l_bound_jump_height1);
-            Sonic_New_Lua.c_homing_brake = (Sonic_New_Lua.c_homing_spd - Sonic_New_Lua.c_jump_run_orig) / Sonic_New_Lua.c_homing_time;
-            Sonic_Fast_Lua.c_run_acc = (Sonic_Fast_Lua.c_run_speed_max - Sonic_Fast_Lua.c_walk_speed_max) / Sonic_Fast_Lua.l_run_acc;
-            Knuckles_Lua.c_run_acc = (Knuckles_Lua.c_run_speed_max - Knuckles_Lua.c_walk_speed_max) / Knuckles_Lua.l_run_acc;
-            Knuckles_Lua.c_speedup_acc = (Knuckles_Lua.c_speedup_speed_max - Knuckles_Lua.c_walk_speed_max) / Knuckles_Lua.l_speedup_acc;
-            Omega_Lua.c_run_acc = (Omega_Lua.c_run_speed_max - Omega_Lua.c_walk_speed_max) / Omega_Lua.l_run_acc;
-            Omega_Lua.c_jump_walk = Omega_Lua.l_jump_walk / (2f * Mathf.Sqrt(2f * Omega_Lua.l_jump_hight / 9.81f));
-            Omega_Lua.c_jump_run = Omega_Lua.l_jump_run / (2f * Mathf.Sqrt(2f * Omega_Lua.l_jump_hight / 9.81f));
-            Omega_Lua.c_speedup_acc = (Omega_Lua.c_speedup_speed_max - Omega_Lua.c_walk_speed_max) / Omega_Lua.l_speedup_acc;
-            Princess_Lua.c_run_acc = (Princess_Lua.c_run_speed_max - Princess_Lua.c_walk_speed_max) / Princess_Lua.l_run_acc;
-            Princess_Lua.c_jump_walk = Common_Lua.HeightAndDistanceToSpeed(Princess_Lua.l_jump_walk, Princess_Lua.l_jump_hight);
-            Princess_Lua.c_speedup_acc = (Princess_Lua.c_speedup_speed_max - Princess_Lua.c_walk_speed_max) / Princess_Lua.l_speedup_acc;
-            Princess_Lua.c_homing_brake = (Princess_Lua.c_homing_spd - Princess_Lua.c_jump_run_orig) / Princess_Lua.c_homing_time;
-            Rouge_Lua.c_run_acc = (Rouge_Lua.c_run_speed_max - Rouge_Lua.c_walk_speed_max) / Rouge_Lua.l_run_acc;
-            Rouge_Lua.c_speedup_acc = (Rouge_Lua.c_speedup_speed_max - Rouge_Lua.c_walk_speed_max) / Rouge_Lua.l_speedup_acc;
-            Shadow_Lua.c_run_acc = (Shadow_Lua.c_run_speed_max - Shadow_Lua.c_walk_speed_max) / Shadow_Lua.l_run_acc;
-            Shadow_Lua.c_speedup_acc = (Shadow_Lua.c_speedup_speed_max - Shadow_Lua.c_walk_speed_max) / Shadow_Lua.l_speedup_acc;
-            Shadow_Lua.c_homing_brake = (Shadow_Lua.c_homing_spd - Shadow_Lua.c_jump_run_orig) / Shadow_Lua.c_homing_time;
-            Silver_Lua.c_run_acc = (Silver_Lua.c_run_speed_max - Silver_Lua.c_walk_speed_max) / Silver_Lua.l_run_acc;
-            Silver_Lua.c_speedup_acc = (Silver_Lua.c_speedup_speed_max - Silver_Lua.c_walk_speed_max) / Silver_Lua.l_speedup_acc;
-            Silver_Lua.c_tele_dash_speed = Silver_Lua.l_tele_dash / Silver_Lua.c_tele_dash_time;
-            Silver_Lua.c_psi_gauge_catch_ride = Silver_Lua.psi_power / Silver_Lua.l_psi_gauge_catch_ride;
-            Silver_Lua.c_psi_gauge_float = Silver_Lua.psi_power / (Silver_Lua.l_psi_gauge_float / (Silver_Lua.c_float_walk_speed / 1.85f));
-            Silver_Lua.c_psi_gauge_teleport_dash_burn = Silver_Lua.psi_power / (Silver_Lua.l_psi_gauge_float / (Silver_Lua.c_float_walk_speed / 2f));
-            Sonic_Fast_Lua.c_run_acc = (Sonic_Fast_Lua.c_run_speed_max - Sonic_Fast_Lua.c_walk_speed_max) / Sonic_Fast_Lua.l_run_acc;
-            Tails_Lua.c_run_acc = (Tails_Lua.c_run_speed_max - Tails_Lua.c_walk_speed_max) / Tails_Lua.l_run_acc;
-            Tails_Lua.c_speedup_acc = (Tails_Lua.c_speedup_speed_max - Tails_Lua.c_walk_speed_max) / Tails_Lua.l_speedup_acc;
-            */
-        }
 
         public void LoadSettings()
         {
@@ -1916,6 +1783,174 @@ namespace P06X
             public static float HomingAttackTimeShortener = 1f;
 
             public static float AfterHomingRotationSpeed = 1f;
+
+            public static Dictionary<(string, string), float> OriginalSpeedLUAs = new Dictionary<(string, string), float>();
+
+            enum LUASpeedType { Run, Jump, Spindash, Speedup, Flight, Climb, Homing }
+            public void InitializeOriginalLUA()
+            {
+                var luas = new (string, string)[] {
+                    ("Sonic_New_Lua", "c_run_speed_max"),
+                    ("Sonic_New_Lua", "c_run_speed_max"),
+                    ("Sonic_New_Lua", "c_jump_run"),
+                    ("Sonic_New_Lua", "c_spindash_spd"),
+                    ("Sonic_New_Lua", "c_speedup_speed_max"),
+                    ("Sonic_Fast_Lua", "c_walk_speed_max"),
+                    ("Sonic_Fast_Lua", "c_run_speed_max"),
+                    ("Sonic_Fast_Lua", "c_lightdash_speed"),
+                    ("Sonic_Fast_Lua", "c_lightdash_mid_speed"),
+                    ("Sonic_Fast_Lua", "c_lightdash_mid_speed_super"),
+                    ("Tails_Lua", "c_run_speed_max"),
+                    ("Tails_Lua", "c_jump_run"),
+                    ("Tails_Lua", "c_flight_speed_max"),
+                    ("Tails_Lua", "c_speedup_speed_max"),
+                    ("Shadow_Lua", "c_run_speed_max"),
+                    ("Shadow_Lua", "c_speedup_speed_max"),
+                    ("Shadow_Lua", "c_jump_run"),
+                    ("Shadow_Lua", "c_spindash_spd"),
+                    ("Knuckles_Lua", "c_climb_speed"),
+                    ("Knuckles_Lua", "c_run_speed_max"),
+                    ("Knuckles_Lua", "c_speedup_speed_max"),
+                    ("Knuckles_Lua", "c_jump_run"),
+                    ("Knuckles_Lua", "c_flight_speed_max"),
+                    ("Omega_Lua", "c_run_speed_max"),
+                    ("Omega_Lua", "l_jump_run"),
+                    ("Omega_Lua", "c_speedup_speed_max"),
+                    ("Princess_Lua", "c_run_speed_max"),
+                    ("Princess_Lua", "c_speedup_speed_max"),
+                    ("Princess_Lua", "c_jump_run"),
+                    ("Rouge_Lua", "c_run_speed_max"),
+                    ("Rouge_Lua", "c_speedup_speed_max"),
+                    ("Rouge_Lua", "c_jump_run"),
+                    ("Rouge_Lua", "c_flight_speed_max"),
+                    ("Rouge_Lua", "c_climb_speed"),
+                    ("Silver_Lua", "c_run_speed_max"),
+                    ("Silver_Lua", "c_speedup_speed_max"),
+                    ("Silver_Lua", "c_jump_run"),
+                    ("Silver_Lua", "c_float_walk_speed"),
+                    ("Shadow_Lua", "c_homing_spd"),
+                    ("Sonic_New_Lua", "c_homing_spd"),
+                    ("Princess_Lua", "c_homing_spd")
+                };
+
+                OriginalSpeedLUAs.Clear();
+                Assembly ass = Assembly.GetAssembly(typeof(SonicNew));
+
+                foreach (var (character, lua) in luas)
+                {
+                    var originalValue = ass.GetType("STHLUA." + character).Get<float>(lua);
+                    OriginalSpeedLUAs.Add((character, lua), originalValue);
+                }
+            }
+
+            public static void ResetLUA()
+            {
+                Assembly ass = Assembly.GetAssembly(typeof(SonicNew));
+                foreach (var kv in OriginalSpeedLUAs)
+                {
+                    var (character, lua) = kv.Key;
+                    var originalValue = kv.Value;
+                    ass.GetType("STHLUA." + character).Set<float>(lua, originalValue);
+                }
+            }
+
+
+
+            public static void UpdateLUA()
+            {
+                XDebug.Comment("[pending]");
+                Assembly ass = Assembly.GetAssembly(typeof(SonicNew));
+                foreach (var kv in OriginalSpeedLUAs)
+                {
+                    var (character, lua) = kv.Key;
+                    var originalValue = kv.Value;
+                    ass.GetType("STHLUA." + character).Set<float>(lua, originalValue * XDebug.CustomSpeedMultiplier.Ground);
+                }
+                /*
+                this.ResetLUA();
+                Sonic_New_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Sonic_New_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Sonic_Fast_Lua.c_walk_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Sonic_Fast_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Tails_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Tails_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Shadow_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Shadow_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Knuckles_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Knuckles_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Omega_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Omega_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Princess_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Princess_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Rouge_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Rouge_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Silver_Lua.c_run_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Silver_Lua.c_speedup_speed_max *= XDebug.CustomSpeedMultiplier.Ground;
+                Silver_Lua.c_float_walk_speed *= XDebug.CustomSpeedMultiplier.Ground;
+                Sonic_New_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
+                Sonic_Fast_Lua.c_lightdash_speed *= XDebug.CustomSpeedMultiplier.Air;
+                Sonic_Fast_Lua.c_lightdash_mid_speed *= XDebug.CustomSpeedMultiplier.Air;
+                Sonic_Fast_Lua.c_lightdash_mid_speed_super *= XDebug.CustomSpeedMultiplier.Air;
+                Tails_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
+                Shadow_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
+                Knuckles_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
+                Omega_Lua.l_jump_run *= XDebug.CustomSpeedMultiplier.Air;
+                Princess_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
+                Rouge_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
+                Silver_Lua.c_jump_run *= XDebug.CustomSpeedMultiplier.Air;
+                Sonic_New_Lua.c_spindash_spd *= XDebug.CustomSpeedMultiplier.Spindash;
+                Shadow_Lua.c_spindash_spd *= XDebug.CustomSpeedMultiplier.Spindash;
+                Tails_Lua.c_flight_speed_max *= XDebug.CustomSpeedMultiplier.Flying;
+                Shadow_Lua.c_spindash_spd *= XDebug.CustomSpeedMultiplier.Flying;
+                Knuckles_Lua.c_flight_speed_max *= XDebug.CustomSpeedMultiplier.Flying;
+                Rouge_Lua.c_flight_speed_max *= XDebug.CustomSpeedMultiplier.Flying;
+                Knuckles_Lua.c_climb_speed *= XDebug.CustomSpeedMultiplier.Climbing;
+                Rouge_Lua.c_climb_speed *= XDebug.CustomSpeedMultiplier.Climbing;
+                Sonic_New_Lua.c_homing_spd *= XDebug.CustomSpeedMultiplier.Homing;
+                Shadow_Lua.c_homing_spd *= XDebug.CustomSpeedMultiplier.Homing;
+                Princess_Lua.c_homing_spd *= XDebug.CustomSpeedMultiplier.Homing;
+                if (this.ASCLuaRecalc.Value)
+                {
+                    this.RecalcLua();
+                }
+                */
+            }
+
+            public static void RecalcLua()
+            {
+                /*
+                Sonic_New_Lua.c_run_acc = (Sonic_New_Lua.c_run_speed_max - Sonic_New_Lua.c_walk_speed_max) / Sonic_New_Lua.l_run_acc;
+                Sonic_New_Lua.c_speedup_acc = (Sonic_New_Lua.c_speedup_speed_max - Sonic_New_Lua.c_walk_speed_max) / Sonic_New_Lua.l_speedup_acc;
+                Sonic_New_Lua.c_bound_jump_spd_0 = Common_Lua.HeightToSpeed(Sonic_New_Lua.l_bound_jump_height0);
+                Sonic_New_Lua.c_bound_jump_spd_1 = Common_Lua.HeightToSpeed(Sonic_New_Lua.l_bound_jump_height1);
+                Sonic_New_Lua.c_homing_brake = (Sonic_New_Lua.c_homing_spd - Sonic_New_Lua.c_jump_run_orig) / Sonic_New_Lua.c_homing_time;
+                Sonic_Fast_Lua.c_run_acc = (Sonic_Fast_Lua.c_run_speed_max - Sonic_Fast_Lua.c_walk_speed_max) / Sonic_Fast_Lua.l_run_acc;
+                Knuckles_Lua.c_run_acc = (Knuckles_Lua.c_run_speed_max - Knuckles_Lua.c_walk_speed_max) / Knuckles_Lua.l_run_acc;
+                Knuckles_Lua.c_speedup_acc = (Knuckles_Lua.c_speedup_speed_max - Knuckles_Lua.c_walk_speed_max) / Knuckles_Lua.l_speedup_acc;
+                Omega_Lua.c_run_acc = (Omega_Lua.c_run_speed_max - Omega_Lua.c_walk_speed_max) / Omega_Lua.l_run_acc;
+                Omega_Lua.c_jump_walk = Omega_Lua.l_jump_walk / (2f * Mathf.Sqrt(2f * Omega_Lua.l_jump_hight / 9.81f));
+                Omega_Lua.c_jump_run = Omega_Lua.l_jump_run / (2f * Mathf.Sqrt(2f * Omega_Lua.l_jump_hight / 9.81f));
+                Omega_Lua.c_speedup_acc = (Omega_Lua.c_speedup_speed_max - Omega_Lua.c_walk_speed_max) / Omega_Lua.l_speedup_acc;
+                Princess_Lua.c_run_acc = (Princess_Lua.c_run_speed_max - Princess_Lua.c_walk_speed_max) / Princess_Lua.l_run_acc;
+                Princess_Lua.c_jump_walk = Common_Lua.HeightAndDistanceToSpeed(Princess_Lua.l_jump_walk, Princess_Lua.l_jump_hight);
+                Princess_Lua.c_speedup_acc = (Princess_Lua.c_speedup_speed_max - Princess_Lua.c_walk_speed_max) / Princess_Lua.l_speedup_acc;
+                Princess_Lua.c_homing_brake = (Princess_Lua.c_homing_spd - Princess_Lua.c_jump_run_orig) / Princess_Lua.c_homing_time;
+                Rouge_Lua.c_run_acc = (Rouge_Lua.c_run_speed_max - Rouge_Lua.c_walk_speed_max) / Rouge_Lua.l_run_acc;
+                Rouge_Lua.c_speedup_acc = (Rouge_Lua.c_speedup_speed_max - Rouge_Lua.c_walk_speed_max) / Rouge_Lua.l_speedup_acc;
+                Shadow_Lua.c_run_acc = (Shadow_Lua.c_run_speed_max - Shadow_Lua.c_walk_speed_max) / Shadow_Lua.l_run_acc;
+                Shadow_Lua.c_speedup_acc = (Shadow_Lua.c_speedup_speed_max - Shadow_Lua.c_walk_speed_max) / Shadow_Lua.l_speedup_acc;
+                Shadow_Lua.c_homing_brake = (Shadow_Lua.c_homing_spd - Shadow_Lua.c_jump_run_orig) / Shadow_Lua.c_homing_time;
+                Silver_Lua.c_run_acc = (Silver_Lua.c_run_speed_max - Silver_Lua.c_walk_speed_max) / Silver_Lua.l_run_acc;
+                Silver_Lua.c_speedup_acc = (Silver_Lua.c_speedup_speed_max - Silver_Lua.c_walk_speed_max) / Silver_Lua.l_speedup_acc;
+                Silver_Lua.c_tele_dash_speed = Silver_Lua.l_tele_dash / Silver_Lua.c_tele_dash_time;
+                Silver_Lua.c_psi_gauge_catch_ride = Silver_Lua.psi_power / Silver_Lua.l_psi_gauge_catch_ride;
+                Silver_Lua.c_psi_gauge_float = Silver_Lua.psi_power / (Silver_Lua.l_psi_gauge_float / (Silver_Lua.c_float_walk_speed / 1.85f));
+                Silver_Lua.c_psi_gauge_teleport_dash_burn = Silver_Lua.psi_power / (Silver_Lua.l_psi_gauge_float / (Silver_Lua.c_float_walk_speed / 2f));
+                Sonic_Fast_Lua.c_run_acc = (Sonic_Fast_Lua.c_run_speed_max - Sonic_Fast_Lua.c_walk_speed_max) / Sonic_Fast_Lua.l_run_acc;
+                Tails_Lua.c_run_acc = (Tails_Lua.c_run_speed_max - Tails_Lua.c_walk_speed_max) / Tails_Lua.l_run_acc;
+                Tails_Lua.c_speedup_acc = (Tails_Lua.c_speedup_speed_max - Tails_Lua.c_walk_speed_max) / Tails_Lua.l_speedup_acc;
+                */
+            }
         }
 
         public struct Cheats
