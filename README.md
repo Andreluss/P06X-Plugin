@@ -10,7 +10,4 @@ This constraints make the modding process more challenging, but also make it pos
 
 ## License
 
-This project is licensed under the GNU GPL version 3 or later.
-Autoconf-generated configuration scripts included in this repository
-are covered by the Autoconf Configure Script Exception, version 3.0.
-See COPYING.EXCEPTION for details.
+This project is licensed under GPL-3.0-with-Autoconf-exception. See LICENSE for details.
