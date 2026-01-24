@@ -418,7 +418,8 @@
                 // If is wall jumping already - I can't extend the state enum ...
                 if (WallJump.IsWallJumping) return false;
 
-                // TODO: Add check if the wall jump is enabled in the mod settings...
+                // Check if the wall jump is enabled in the mod settings.
+                if (!XDebug.Instance.Moveset_WallJumping.Value) return false;
 
                 if (I.I.GetPrefab("omega") && !I.Boo["FrontalCollision"])
                 {
