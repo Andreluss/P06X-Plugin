@@ -9,6 +9,10 @@
     public partial class XPlayerBase : MonoBehaviour
     {
         public static XPlayerBase XI;
+        public XPlayerBase()
+        {
+            Debug.Log("XPlayerBase constructor calleddddd");
+        }
         public class IPlayerBase
         {
             public PlayerBase I;
@@ -44,6 +48,7 @@
         {
             public static void Postfix(PlayerBase __instance)
             {
+                WallJump.IsWallJumping = false;
                 XI = __instance.gameObject.AddComponent<XPlayerBase>();
                 I = new IPlayerBase(__instance);
                 Debug.Log("Added XPlayerBase to PlayerBase object!");
@@ -68,7 +73,7 @@
 
 
         // ------------------ Wall Jump ------------------
-        public static class WallJump
+        public class WallJump
         {
             public static bool IsWallJumping = false;
 
@@ -507,7 +512,7 @@
             public static bool CanWaterRun()
             {
                 if (!CheckGameState()) return false;
-                if (I.I.GetState() == "WaterRun") return false;
+                if (WaterRun.isWaterRunning) return false; ;
                 //if (I.I.GetPrefab("snow_board")) return false;
 
                 Vector3 vector = default(Vector3);
@@ -536,7 +541,7 @@
                     I.I.StateMachine.ChangeState(XI.StateVDodge);
                 }
 
-                if (CanWaterRun())
+                if (false && CanWaterRun()) // TODO: enable when implemented
                 {
                     I.I.StateMachine.ChangeState(XI.StateWaterRun);
                 }
