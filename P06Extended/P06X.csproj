@@ -126,6 +126,9 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(TargetPath)" "$(ProjectDir)..\..\Sonic the Hedgehog (P-06)\Plugins\"
-start "" "$(ProjectDir)..\..\Sonic the Hedgehog (P-06)\Sonic the Hedgehog.exe"</PostBuildEvent>
+start /b "" "$(ProjectDir)..\..\Sonic the Hedgehog (P-06)\Sonic the Hedgehog.exe"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>taskkill /f /im "Sonic the Hedgehog.exe" /t 2&gt;nul || set errorlevel=0</PreBuildEvent>
   </PropertyGroup>
 </Project>
