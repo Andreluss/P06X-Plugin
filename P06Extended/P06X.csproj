@@ -124,4 +124,8 @@
     <Compile Include="XSplashScreens.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /y "$(TargetPath)" "$(ProjectDir)..\..\Sonic the Hedgehog (P-06)\Plugins\"
+start "" "$(ProjectDir)..\..\Sonic the Hedgehog (P-06)\Sonic the Hedgehog.exe"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
