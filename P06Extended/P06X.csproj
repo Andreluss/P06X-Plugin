@@ -112,6 +112,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls.cs" />
+    <Compile Include="SonicNew\States\XSonicNew.GetUpX.cs" />
+    <Compile Include="SonicNew\States\XSonicNew.Stomp.cs" />
+    <Compile Include="SonicNew\XSonicNew.Patches.cs" />
     <Compile Include="WaterRun.cs" />
     <Compile Include="XCommon.cs" />
     <Compile Include="Extensions.cs" />
@@ -120,9 +123,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XKnuckles.cs" />
     <Compile Include="XPlayerBase.cs" />
-    <Compile Include="XSonicNew.cs" />
+    <Compile Include="SonicNew\XSonicNew.cs" />
     <Compile Include="XSplashScreens.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(TargetPath)" "$(ProjectDir)..\..\Sonic the Hedgehog (P-06)\Plugins\"
