@@ -236,127 +236,6 @@
         }
 
 
-
-        // -------- Dodge --------  
-        // Fix the 3 StateDodge functions to use the new reflection wrapper,
-        // but please note that variables beginning with X_ are not part of the original SonicNew class and should be changed to static variables from the Dodge class below.
-
-        public static class Dodge
-        {
-            public static readonly float VelMult = 1f;
-            public static readonly float RotDuration = 0.1f;
-            public static readonly float Dist = 3f;
-            public static readonly float Duration = 0.15f;
-            public static readonly float Delay = 0.0f; // idk
-            public static readonly Vector3 RotAngles = new Vector3(0f, 0f, -30f);
-            public static readonly float RotBackDuration = RotDuration / 4f;
-            public static readonly float Offset = 0.15f;
-            public static readonly float Slow = 0f;
-            public static readonly float FTime = 0.1f;
-
-            public static float Time;
-            public static float PreDodgeCurSpeed;
-            public static Vector3 CurrSpeed;
-            public static Vector3 BaseSpeed;
-            public static int Dir;
-            public static Quaternion RotA;
-            public static Quaternion RotB;
-            public static float NextTime;
-            public static string _BumperName; // "Left Bumper" or "Right Bumper"
-            public static bool _BumperReleased = true;
-        }
-
-
-        /* TODO: Write the same for the GetButton(int) version ? */
-        [HarmonyPatch(typeof(Rewired.Player), "GetButton", new Type[] { typeof(string) })]
-        public class Rewired_Player_GetButton
-        {
-            public static void Postfix(Rewired.Player __instance, ref bool __result, string actionName)
-            {
-                // Take away (hide from camera script) the button press if it's being used as a dodge trigger 
-                if (actionName != Dodge._BumperName || Dodge._BumperReleased) return;
-
-                // If the button have been released, stop blocking the button.
-                if (!__result)
-                {
-                    Dodge._BumperReleased = true;
-                    return;
-                }
-
-                // Otherwise (when the button is still pressed), block it.
-                __result = false;
-            }
-        }
-
-        public void StateDodgeStart()
-        {
-            // As long as the Right Bumper is pressed, override the return value of the Singleton<RInput>.Instance.P.GetButton("Left Bumper") to false
-            Dodge._BumperReleased = false;
-
-            I.Stt["PlayerState"] = SonicNew.State.Ground;
-            Dodge.Time = Time.time;
-            I.Boo["LockControls"] = true;
-            I.Vec["AirMotionVelocity"] = II._Rigidbody.velocity;
-            Dodge.PreDodgeCurSpeed = I.Flt["CurSpeed"];
-            Dodge.CurrSpeed = Vector3.zero;
-            Dodge.BaseSpeed = Dodge.Dist / Dodge.Duration * II.transform.right * Dodge.Dir;
-            II._Rigidbody.velocity = I.Vec["AirMotionVelocity"] * Dodge.VelMult + Dodge.CurrSpeed / 4f;
-            // XSingleton<XEffects>.Instance.CreateDodgeFX();
-            II.Animator.CrossFadeInFixedTime("Light Dash", 0.04f);
-
-            Dodge.RotA = I.Qua["GeneralMeshRotation"];
-            Dodge.RotB = I.Qua["GeneralMeshRotation"] * Quaternion.Euler(Dodge.Dir * Dodge.RotAngles);
-            I.PCa["Camera"].transform.position += II._Rigidbody.velocity * Time.deltaTime;
-
-            Dodge.NextTime = Time.time + 2.2f;
-            //II.Get<AudioSource>("Audio").PlayOneShot(/* DodgeClip */, II.Get<AudioSource>("Audio").volume * 1.5f);
-        }
-        public void StateDodge()
-        {
-            float num = Dodge.Time + Dodge.Duration;
-            if (Time.time - Dodge.Time <= Dodge.RotDuration)
-            {
-                I.Qua["GeneralMeshRotation"] = Quaternion.Slerp(Dodge.RotA, Dodge.RotB, (Time.time - Dodge.Time) / Dodge.RotDuration);
-            }
-            else if (num - Time.time <= Dodge.RotBackDuration)
-            {
-                I.Qua["GeneralMeshRotation"] = Quaternion.Slerp(Dodge.RotB, Dodge.RotA, 1f - (num - Time.time) / Dodge.RotBackDuration);
-            }
-            float num2 = (Time.time - Dodge.Time) / Dodge.Duration;
-            if (num2 < Dodge.Offset)
-            {
-                Dodge.CurrSpeed = Vector3.Slerp(Dodge.BaseSpeed * Dodge.Slow, Dodge.BaseSpeed, num2 / Dodge.FTime);
-            }
-            else if (1f - Dodge.Offset < num2)
-            {
-                Dodge.CurrSpeed = Vector3.Slerp(Dodge.BaseSpeed, Dodge.BaseSpeed * Dodge.Slow, (num2 - (1f - Dodge.Offset)) / Dodge.Offset);
-            }
-            else
-            {
-                Dodge.CurrSpeed = Dodge.BaseSpeed;
-            }
-
-            II._Rigidbody.velocity = I.Vec["AirMotionVelocity"] * Dodge.VelMult + Dodge.CurrSpeed;
-            I.PCa["Camera"].transform.position += Dodge.CurrSpeed * Time.deltaTime;
-        
-            if (Time.time - Dodge.Time >= Dodge.Duration || II.InvokeFunc<bool>("ShouldEdgeDanger") || Vector3.Dot(II.transform.right * Dodge.Dir, II._Rigidbody.velocity) < 0.1f)
-            {
-                II.StateMachine.ChangeState(II.GetState("StateGround"));
-            }
-        }
-        private void StateDodgeEnd()
-        {
-            I.Boo["LockControls"] = false;
-            II._Rigidbody.velocity = II.transform.forward * I.Vec["AirMotionVelocity"].magnitude;
-            I.Flt["CurSpeed"] = Dodge.PreDodgeCurSpeed;
-            // XSingleton<XEffects>.Instance.DestroyDodgeFX();
-            Dodge.NextTime = Time.time + Dodge.Delay;
-        }
-
-
-
-
-
         // -------------- Update patch --------------
         [HarmonyPatch(typeof(SonicNew), "Update")]
         public class SonicNew_Update
@@ -384,50 +263,18 @@
 
                 return cond1 && cond2;
             }
-            private static bool CanDodge(ref int dodgeDir, ref string buttonName)
-            {
-                // TODO: add original camera controls etc.
-                bool cond1 = Singleton<GameManager>.Instance.GameState != GameManager.State.Paused &&
-                             Singleton<GameManager>.Instance.GameState != GameManager.State.Result &&
-                             II.Get<StageManager>("StageManager")
-                               .Get<StageManager.State>("StageState") != StageManager.State.Event &&
-                             !I.Boo["IsDead"] &&
-                             I.Stt["PlayerState"] != SonicNew.State.Talk;
-                bool cond2 = /*II.Get<SonicNew.State>("PlayerState") == SonicNew.State.Ground &&*/ Time.time >= Dodge.NextTime;
-                if (!(cond1 && cond2)) return false;
-
-                if (XInput.Controls.GetButtonDown(XInput.REWIRED_RIGHT_BUMPER))
-                {
-                    dodgeDir = 1;
-                    buttonName = XInput.REWIRED_RIGHT_BUMPER;
-                    return true;
-                }
-                else if (XInput.Controls.GetButtonDown(XInput.REWIRED_LEFT_BUMPER))
-                {
-                    dodgeDir = -1;
-                    buttonName = XInput.REWIRED_LEFT_BUMPER;
-                    return true;
-                }
-                return false;
-            }
+            
             public static void Postfix(SonicNew __instance)
             {
-                //ensure the extension code is actually attached
+                // ensure the extension code is actually attached
                 if (XInstance == null) return;
                 Assert.IsTrue(__instance == II);
-                //Debug.Log("sonicNew update");
 
-                //check the possibile state changes
+                // check the possibile state changes
                 if (CanStomp(__instance))
                 {
                     __instance.StateMachine.ChangeState(XInstance.StateStomp);
                 }
-                // let sonic_new also use the new dodge from playerbase
-                //if (CanDodge(ref Dodge.Dir, ref Dodge._BumperName))
-                //{
-                //    __instance.StateMachine.ChangeState(XInstance.StateDodge);
-                //}
-
             }
         }
     }
