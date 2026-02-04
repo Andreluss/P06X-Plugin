@@ -48,7 +48,6 @@
         {
             public static void Postfix(PlayerBase __instance)
             {
-                WallJump.IsWallJumping = false;
                 XI = __instance.gameObject.AddComponent<XPlayerBase>();
                 I = new IPlayerBase(__instance);
                 Debug.Log("Added XPlayerBase to PlayerBase object!");
@@ -73,31 +72,27 @@
 
 
         // ------------------ Wall Jump ------------------
-        public class WallJump
+        public class WallJumpState
         {
-            public static bool IsWallJumping = false;
+            // Static configuration
+            public static readonly float MaxWaitTime = 0.75f;
+            public static readonly float MinDotNormal = -0.5f;
+            public static readonly float MaxDotNormal = 0.5f;
+            public static readonly float UpOffset = -0.25f;
+            public static readonly float NormalOffset = 0.5f;
+            public static readonly Vector3 MeshRotation = new Vector3(90f, 0f, 0f);
+            public static readonly float JumpStrength = 25f;
+            public static readonly float MinHeightAboveGround = 1f;
 
-            public static float MaxWaitTime = 0.75f;
-
-            public static float MinDotNormal = -0.5f;
-
-            public static float MaxDotNormal = 0.5f;
-
-            public static float UpOffset = -0.25f;
-
-            public static float NormalOffset = 0.5f;
-
-            public static Vector3 MeshRotation = new Vector3(90f, 0f, 0f);
-
-            public static float JumpStrength = 25f;
-
-            public static float MinHeightAboveGround = 1f;
-
-            public static float Time;
-            public static bool IsWaiting;
-            public static Vector3 Normal;
-            public static bool OtherCharacter;
+            // Instance state
+            public bool IsWallJumping = false;
+            public float Time;
+            public bool IsWaiting;
+            public Vector3 Normal;
+            public bool OtherCharacter;
         }
+
+        public WallJumpState WallJump = new WallJumpState();
         public void StateWallJumpStart()
         {
             I.I.SetState("Path"); // so you can't jump dash
@@ -112,7 +107,7 @@
             if (I.I.GetPrefab("sonic_new") || I.I.GetPrefab("shadow") || I.I.GetPrefab("sonic_fast") || I.I.GetPrefab("princess"))
             {
                 I.I.PlayAnimation("Chain Jump Wall Wait", "On Chain Jump Wall Wait");
-                I.Qua["GeneralMeshRotation"] = Quaternion.LookRotation(I.I.transform.forward, I.I.transform.up) * Quaternion.Euler(WallJump.MeshRotation);
+                I.Qua["GeneralMeshRotation"] = Quaternion.LookRotation(I.I.transform.forward, I.I.transform.up) * Quaternion.Euler(WallJumpState.MeshRotation);
             }
             else if (I.I.GetPrefab("rouge"))
             {
@@ -131,7 +126,7 @@
                 WallJump.OtherCharacter = true;
             }
 
-            I.I.transform.position = I.RcH["FrontalHit"].point + I.I.transform.up * WallJump.UpOffset + I.RcH["FrontalHit"].normal * ((!WallJump.OtherCharacter) ? WallJump.NormalOffset : 0f);
+            I.I.transform.position = I.RcH["FrontalHit"].point + I.I.transform.up * WallJumpState.UpOffset + I.RcH["FrontalHit"].normal * ((!WallJump.OtherCharacter) ? WallJumpState.NormalOffset : 0f);
             XSingleton<XDebug>.Instance.DrawVectorFast(base.transform.position, base.transform.position + base.transform.up, Color.blue, 3);
 
             I.I._Rigidbody.velocity = Vector3.zero;
@@ -141,11 +136,11 @@
         public void StateWallJump()
         {
             I.Boo["LockControls"] = true;
-            if (Time.time - WallJump.Time > WallJump.MaxWaitTime)
+            if (Time.time - WallJump.Time > WallJumpState.MaxWaitTime)
             {
                 if (WallJump.OtherCharacter)
                 {
-                    I.I.transform.position += WallJump.Normal * WallJump.NormalOffset;
+                    I.I.transform.position += WallJump.Normal * WallJumpState.NormalOffset;
                 }
                 I.I.StateMachine.ChangeState(I.I.GetState("StateAir"));
                 return;
@@ -161,38 +156,36 @@
 
 
         // -------------------- V-Dodge --------------------
-        public static class VDodge
+        public class VDodgeState
         {
-            public static bool IsVDodging;
-            
-            public static int Dir;
-            public static string _ButtonName;
-            public static bool _ButtonReleased;
+            // Static configuration
+            public static /*readonly*/ float RotAngles = 20f;
+            public static /*readonly*/ float VelMult = 0.5f;
+            public static /*readonly*/ float Speed = 22f;
+            public static /*readonly*/ float RotDuration = 0.03f;
+            public static /*readonly*/ float RotBackDuration = 0.07f;
+            public static /*readonly*/ float AccDuration = 0.08f;
+            public static /*readonly*/ float Dmin = 0.12f;
+            public static /*readonly*/ float Dmax = 0.35f;
+            public static /*readonly*/ int CscFixMode = 2;
 
-            public static float Time;
-            public static float EndTime;
-
-            public static bool Stopped;
-            internal static float PreDodgeCurSpeed;
-
-            public static int _csc_fix_mode = 2;
-            public static Vector3 MaxSideVel;
-            public static Vector3 SideCurVel;
-            public static Vector3 PreDodgeVel;
-
-            public static Quaternion RotA;
-            public static Quaternion RotB;
-
-            public static float RotAngles = 20f;
-            public static bool _fwdacc = true;
-            public static float VelMult = 0.5f;
-            public static float Speed = 22f;
-            public static float RotDuration = 0.03f;// 0.1f;
-            public static float RotBackDuration = 0.07f; // 0.03f;
-            public static float AccDuration = 0.07f;
-            public static float Dmin = 0.10f;
-            public static float Dmax = 0.4f;
+            // Instance state
+            public bool IsVDodging;
+            public int Dir;
+            public string ButtonName;
+            public bool ButtonReleased;
+            public float Time;
+            public float EndTime;
+            public bool Stopped;
+            public float PreDodgeCurSpeed;
+            public Vector3 MaxSideVel;
+            public Vector3 SideCurVel;
+            public Vector3 PreDodgeVel;
+            public Quaternion RotA;
+            public Quaternion RotB;
         }
+
+        public VDodgeState VDodge = new VDodgeState();
         public Vector3 RealRight()
         {
             Vector3 groundNormal = I.RcH["RaycastHit"].normal;
@@ -207,12 +200,13 @@
             public static void Postfix(Rewired.Player __instance, ref bool __result, string actionName)
             {
                 // Take away (hide from camera script) the button press if it's being used as a dodge trigger 
-                if (actionName != VDodge._ButtonName || VDodge._ButtonReleased) return;
+                if (XI == null || actionName != XI.VDodge.ButtonName || XI.VDodge.ButtonReleased) return;
 
                 // If the button have been released, stop blocking the button.
                 if (!__result)
                 {
-                    VDodge._ButtonReleased = true;
+                    Debug.Log("Dodge Button Released (button name: " + XI.VDodge.ButtonName + ")");
+                    XI.VDodge.ButtonReleased = true;
                     return;
                 }
 
@@ -225,7 +219,7 @@
             I.I.SetState("Path");
             //I.Boo["LockControls"] = true;
             VDodge.IsVDodging = true;
-            VDodge._ButtonReleased = false;
+            VDodge.ButtonReleased = false;
             VDodge.Time = Time.time;
             VDodge.EndTime = VDodge.Time + 99999f;
             VDodge.Stopped = false;
@@ -233,7 +227,7 @@
             VDodge.PreDodgeVel = I.I._Rigidbody.velocity;
             if (I.StageManager._Stage == StageManager.Stage.csc && I.StageManager.StageSection == StageManager.Section.E && I.I.GetPrefab("sonic_fast"))
             {
-                if (VDodge._csc_fix_mode == 1)
+                if (VDodgeState.CscFixMode == 1)
                 {
                     bool flag = Vector3.Dot(I.Camera.transform.forward, I.I._Rigidbody.velocity) < 0f;
                     Vector3 vector = Vector3.ProjectOnPlane(I.Camera.transform.forward * (flag ? -1 : 1), I.RcH["RaycastHit"].normal);
@@ -245,19 +239,19 @@
                         XDebug.Comment(string.Format("<color=#ee6600>Adjusted direction by {0} deg</color>", Vector3.Angle(vector, Vector3.ProjectOnPlane(base.transform.forward, I.RcH["RaycastHit"].normal))));
                     }
                 }
-                else if (VDodge._csc_fix_mode == 2)
+                else if (VDodgeState.CscFixMode == 2)
                 {
                     I.I.transform.forward = Vector3.ProjectOnPlane(new Vector3(-1f, 0f, 0f), I.RcH["RaycastHit"].normal).normalized;
                 }
             }
 
             Vector3 normalized = Vector3.ProjectOnPlane(Vector3.Cross(I.Vec["UpMeshRotation"], I.Vec["ForwardMeshRotation"]), I.RcH["RaycastHit"].normal).normalized;
-            VDodge.MaxSideVel = RealRight() * (float)VDodge.Dir * VDodge.Speed;
+            VDodge.MaxSideVel = RealRight() * (float)VDodge.Dir * VDodgeState.Speed;
             I.Vec["AirMotionVelocity"] = I.I._Rigidbody.velocity;
             
             VDodge.RotA = I.Qua["GeneralMeshRotation"];
-            VDodge.RotB = I.Qua["GeneralMeshRotation"] * Quaternion.Euler(0f, 0f, (float)(-VDodge.RotAngles * VDodge.Dir));
             //I.I.Animator.CrossFadeInFixedTime("Light Dash", 0.04f); // TODO: check for each player  
+            VDodge.RotB = I.Qua["GeneralMeshRotation"] * Quaternion.Euler(0f, 0f, (float)(-VDodgeState.RotAngles * VDodge.Dir));
             XSingleton<XEffects>.Instance.CreateDodgeFX();
             //I.I.Audio.PlayOneShot(/*XSingleton<XDebug>.Instance.DodgeClipFull*/"DodgeClipFull", I.I.Audio.volume * 1.2f);
         }
@@ -268,21 +262,20 @@
             //    VDodge._ButtonReleased = true;
             //}
 
-
-            VDodge.Dmin = XDebug.Instance.dbg_floats[0].Value;
-            VDodge.AccDuration = XDebug.Instance.dbg_floats[1].Value;
-            VDodge.RotDuration = XDebug.Instance.dbg_floats[2].Value;
-            VDodge.RotBackDuration = XDebug.Instance.dbg_floats[3].Value;
-            VDodge.Speed = XDebug.Instance.dbg_floats[4].Value;
+            //VDodgeState.Dmin = XDebug.Instance.dbg_floats[0].Value;
+            //VDodgeState.AccDuration = XDebug.Instance.dbg_floats[1].Value;
+            //VDodgeState.RotDuration = XDebug.Instance.dbg_floats[2].Value;
+            //VDodgeState.RotBackDuration = XDebug.Instance.dbg_floats[3].Value;
+            //VDodgeState.Speed = XDebug.Instance.dbg_floats[4].Value;
 
             float elapsed = Time.time - VDodge.Time;
             if (!VDodge.Stopped)
             {
-                if (elapsed >= VDodge.Dmax - VDodge.RotBackDuration || 
-                   (elapsed >= VDodge.Dmin - VDodge.RotBackDuration && VDodge._ButtonReleased))
+                if (elapsed >= VDodgeState.Dmax - VDodgeState.RotBackDuration ||
+                   (elapsed >= VDodgeState.Dmin - VDodgeState.RotBackDuration && XI.VDodge.ButtonReleased))
                 {
                     VDodge.Stopped = true;
-                    VDodge.EndTime = Time.time + VDodge.RotBackDuration;
+                    VDodge.EndTime = Time.time + VDodgeState.RotBackDuration;
                 }
             }
 
@@ -291,36 +284,36 @@
             //VDodge.RotB = I.Qua["GeneralMeshRotation"] * Quaternion.Euler(0f, 0f, -VDodge.RotAngles * (float)VDodge.Dir);
             // Start rotating to the side or back to original rotation before the dodge 
             // TODO: check above assignmetns, make no sense to me
-            if (elapsed <= VDodge.RotDuration)
+            if (elapsed <= VDodgeState.RotDuration)
             {
-                I.Qua["GeneralMeshRotation"] = Quaternion.Slerp(VDodge.RotA, VDodge.RotB, elapsed / VDodge.RotDuration);
+                I.Qua["GeneralMeshRotation"] = Quaternion.Slerp(VDodge.RotA, VDodge.RotB, elapsed / VDodgeState.RotDuration);
             }
-            else if (VDodge.EndTime - Time.time <= VDodge.RotBackDuration)
+            else if (VDodge.EndTime - Time.time <= VDodgeState.RotBackDuration)
             {
-                I.Qua["GeneralMeshRotation"] = Quaternion.Slerp(VDodge.RotB, VDodge.RotA, 1f - (VDodge.EndTime - Time.time) / VDodge.RotBackDuration);
+                I.Qua["GeneralMeshRotation"] = Quaternion.Slerp(VDodge.RotB, VDodge.RotA, 1f - (XI.VDodge.EndTime - Time.time) / VDodgeState.RotBackDuration);
             }
             else
             {
                 I.Qua["GeneralMeshRotation"] = VDodge.RotB;
             }
-            
-            VDodge.MaxSideVel = RealRight() * VDodge.Dir * VDodge.Speed;
-            
-            float num2; 
-            if (Time.time - VDodge.Time <= VDodge.AccDuration)
+
+            VDodge.MaxSideVel = RealRight() * VDodge.Dir * VDodgeState.Speed;
+
+            float num2;
+            if (Time.time - VDodge.Time <= VDodgeState.AccDuration)
             {
-                VDodge.SideCurVel = Vector3.Slerp(Vector3.zero, VDodge.MaxSideVel, (Time.time - VDodge.Time) / VDodge.AccDuration);
-                num2 = Mathf.Lerp(1f, VDodge.VelMult, (Time.time - VDodge.Time) / VDodge.AccDuration);
+                VDodge.SideCurVel = Vector3.Slerp(Vector3.zero, VDodge.MaxSideVel, (Time.time - VDodge.Time) / VDodgeState.AccDuration);
+                num2 = Mathf.Lerp(1f, VDodgeState.VelMult, (Time.time - VDodge.Time) / VDodgeState.AccDuration);
             }
-            else if (VDodge.EndTime - Time.time <= VDodge.AccDuration)
+            else if (VDodge.EndTime - Time.time <= VDodgeState.AccDuration)
             {
-                VDodge.SideCurVel = Vector3.Slerp(VDodge.MaxSideVel, Vector3.zero, 1f - (VDodge.EndTime - Time.time) / VDodge.AccDuration);
-                num2 = Mathf.Lerp(VDodge.VelMult, 1f, 1f - (VDodge.EndTime - Time.time) / VDodge.AccDuration);
+                VDodge.SideCurVel = Vector3.Slerp(VDodge.MaxSideVel, Vector3.zero, 1f - (VDodge.EndTime - Time.time) / VDodgeState.AccDuration);
+                num2 = Mathf.Lerp(VDodgeState.VelMult, 1f, 1f - (VDodge.EndTime - Time.time) / VDodgeState.AccDuration);
             }
             else
             {
                 VDodge.SideCurVel = VDodge.MaxSideVel;
-                num2 = VDodge.VelMult;
+                num2 = VDodgeState.VelMult;
             }
 
             I.I.transform.rotation = Quaternion.FromToRotation(I.I.transform.up, I.RcH["RaycastHit"].normal) * I.I.transform.rotation;
@@ -343,7 +336,7 @@
                 {
                     I.I.StateMachine.ChangeState(I.I.GetState("StateAir"));
                 }
-            }       
+            }
         }
         public void StateVDodgeEnd()
         {
@@ -421,7 +414,7 @@
                 if (I.I.GetPrefab("knuckles") || I.I.GetPrefab("rouge")) return false; // this will be done separately in Knuckles and Rouge classes
 
                 // If is wall jumping already - I can't extend the state enum ...
-                if (WallJump.IsWallJumping) return false;
+                if (XI.WallJump.IsWallJumping) return false;
 
                 // TODO: Add check if the wall jump is enabled in the mod settings...
 
@@ -434,7 +427,7 @@
 
                 if (I.I.GetState().IsInList("Jump", "Air", "AfterHoming", "Homing", "Fly", "Glide") &&
                     I.Boo["FrontalCollision"] && I.RcH["FrontalHit"].transform != null &&
-                    !Boost.IsBoosting && !XI.HasGroundBelow(WallJump.MinHeightAboveGround))
+                    !Boost.IsBoosting && !XI.HasGroundBelow(WallJumpState.MinHeightAboveGround))
                 {
                     if (((I.I.GetPrefab("knuckles") || I.I.GetPrefab("rouge")) && I.RcH["FrontalHit"].transform && I.RcH["FrontalHit"].transform.tag == "ClimbableWall") ||
                         I.I.GetPrefab("sonic_fast") || I.I.GetPrefab("snow_board"))
@@ -445,7 +438,7 @@
                     }
                     XSingleton<XDebug>.Instance.DrawVectorFast(I.I.transform.position, I.I.transform.position + I.RcH["FrontalHit"].normal, Color.red, 2);
                     float dot = Vector3.Dot(I.RcH["FrontalHit"].normal, Vector3.up);
-                    if (WallJump.MinDotNormal <= dot && I.I._Rigidbody.velocity.y < 0f && dot < WallJump.MaxDotNormal)
+                    if (WallJumpState.MinDotNormal <= dot && I.I._Rigidbody.velocity.y < 0f && dot < WallJumpState.MaxDotNormal)
                     {
                         return true;
                     }
@@ -473,7 +466,7 @@
         {
             public static bool CanWallJumpJump()
             {
-                if (!WallJump.IsWallJumping) return false;
+                if (!XI.WallJump.IsWallJumping) return false;
                 if (!CheckGameState()) return false;
 
                 return XInput.Controls.GetButtonDown("Button A");
@@ -482,10 +475,8 @@
             public static bool CanVDodge(ref int direction, ref string buttonName)
             {
                 if (!CheckGameState()) return false;
-                if (VDodge.IsVDodging || Time.time <= VDodge.EndTime) return false;
+                if (XI.VDodge.IsVDodging || Time.time <= XI.VDodge.EndTime) return false;
                 if (I.Boo["LockControls"]) return false;
-                // SonicNew has its own dodge, so skip. 
-                if (I.I.GetPrefab("sonic_new")) return false; 
 
                 // Optionally ensure the player is on the ground. 
                 //if (I.I.GetState() != "Ground") return false;
@@ -527,8 +518,8 @@
 
                 if (CanWallJumpJump())
                 {
-                    I.Flt["CurSpeed"] = WallJump.JumpStrength;
-                    I.I.transform.forward = WallJump.Normal;
+                    I.Flt["CurSpeed"] = WallJumpState.JumpStrength;
+                    I.I.transform.forward = XI.WallJump.Normal;
                     // og note: weird hack to keep vector for jumping in direction opposite to the wall
                     if (I.I._Rigidbody.velocity.y < 3f) {
                         I.I._Rigidbody.velocity += Vector3.up * (3f - I.I._Rigidbody.velocity.y);
@@ -536,7 +527,7 @@
                     I.I.StateMachine.ChangeState(I.I.GetState("StateJump"));
                 }
 
-                if (CanVDodge(ref VDodge.Dir, ref VDodge._ButtonName))
+                if (CanVDodge(ref XI.VDodge.Dir, ref XI.VDodge.ButtonName))
                 {
                     I.I.StateMachine.ChangeState(XI.StateVDodge);
                 }

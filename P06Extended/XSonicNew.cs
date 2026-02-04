@@ -422,10 +422,11 @@
                 {
                     __instance.StateMachine.ChangeState(XInstance.StateStomp);
                 }
-                if (CanDodge(ref Dodge.Dir, ref Dodge._BumperName))
-                {
-                    __instance.StateMachine.ChangeState(XInstance.StateDodge);
-                }
+                // let sonic_new also use the new dodge from playerbase
+                //if (CanDodge(ref Dodge.Dir, ref Dodge._BumperName))
+                //{
+                //    __instance.StateMachine.ChangeState(XInstance.StateDodge);
+                //}
 
             }
         }
