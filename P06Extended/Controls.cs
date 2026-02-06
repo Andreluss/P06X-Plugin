@@ -1446,7 +1446,7 @@ namespace P06X
 
         private int[] _ae_idxs_;
 
-        private Vector3 _fx_offset_;
+        private Vector3 _fx_offset_ = Vector3.zero;
 
         private Color _color_;
 

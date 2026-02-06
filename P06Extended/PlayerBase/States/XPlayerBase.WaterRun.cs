@@ -1,15 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-
-namespace P06X
+﻿namespace P06X
 {
+    using HarmonyLib;
+    using UnityEngine;
+    using Helpers;
+    using UnityEngine.Assertions;
+    using System;
+
     public partial class XPlayerBase : MonoBehaviour
     {
+        public static bool CanWaterRun()
+        {
+            if (!CheckGameState()) return false;
+            if (WaterRun.isWaterRunning) return false; ;
+            //if (I.I.GetPrefab("snow_board")) return false;
+
+            Vector3 vector = default(Vector3);
+            bool is_falling_and_fast_enough = I.I._Rigidbody.velocity.y < 0f && I.Flt["CurSpeed"] > WaterRun.MinActivationSpeed;
+            return is_falling_and_fast_enough && HasWaterBelow(WaterRun.YMaxWaterRaycastDist, ref vector);
+        }
+
+        public static bool HasWaterBelow(float maxDist, out RaycastHit waterHit)
+        {
+            waterHit = default(RaycastHit);
+            foreach (RaycastHit raycastHit in Physics.RaycastAll(I.I.transform.position, -Vector3.up, maxDist))
+            {
+                if (raycastHit.transform.tag == "Water")
+                {
+                    waterHit = raycastHit;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool HasWaterBelow(float maxDist, ref Vector3 waterPosition)
+        {
+            RaycastHit[] array = Physics.RaycastAll(I.I.transform.position, -Vector3.up, maxDist);
+            bool flag = false;
+            foreach (RaycastHit raycastHit in array)
+            {
+                if (raycastHit.transform.tag == "Water")
+                {
+                    flag = true;
+                    waterPosition = raycastHit.point;
+                    break;
+                }
+            }
+            return flag;
+        }
+
         public static class WaterRun
         {
             public static bool isWaterRunning;
@@ -120,8 +159,7 @@ namespace P06X
 
         public void StateWaterRunStart()
         {
-            // rewrite the X_StateFreeWaterSlideStart() function here:
-            // fuck you 
+            // rewrite the X_StateFreeWaterSlideStart() function here
             WaterRun.isWaterRunning = true;
             I.Boo["LockControls"] = true;
 
