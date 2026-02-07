@@ -112,6 +112,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls.cs" />
+    <Compile Include="PlayerBase\States\XPlayerBase.WaterSlide.Patches.cs" />
+    <Compile Include="PlayerBase\States\XPlayerBase.WaterSlide.State.cs" />
+    <Compile Include="PlayerBase\States\XPlayerBase.WaterSlide.cs" />
     <Compile Include="PlayerBase\States\XPlayerBase.WaterRun.cs" />
     <Compile Include="PlayerBase\States\XPlayerBase.VDodge.Helpers.cs" />
     <Compile Include="PlayerBase\States\XPlayerBase.VDodge.cs" />
