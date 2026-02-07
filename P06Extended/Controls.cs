@@ -176,8 +176,7 @@ namespace P06X
             {
             18, 26, 41, 43, 49, 50, 59, 75, 77, 80,
             107, 112, 119, 122, 125, 129
-            };
-            this._TMP_ = 0.3f;
+            }; 
             this.SpeedMultiplier = 1f;
             this.Box_EndTime = 9999f;
             this.SRs = new List<Renderer>();
@@ -1437,8 +1436,6 @@ namespace P06X
         public static readonly string P06X_VERSION = XCommon.Version;
 
         private float SpeedMultiplier;
-
-        private float _TMP_;
 
         private int _T2_;
 

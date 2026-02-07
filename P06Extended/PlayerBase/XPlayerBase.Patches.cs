@@ -48,7 +48,8 @@
                     I.Flt["CurSpeed"] = WallJumpState.JumpStrength;
                     I.I.transform.forward = XI.WallJump.Normal;
                     // og note: weird hack to keep vector for jumping in direction opposite to the wall
-                    if (I.I._Rigidbody.velocity.y < 3f) {
+                    if (I.I._Rigidbody.velocity.y < 3f)
+                    {
                         I.I._Rigidbody.velocity += Vector3.up * (3f - I.I._Rigidbody.velocity.y);
                     }
                     I.I.StateMachine.ChangeState(I.I.GetState("StateJump"));
@@ -59,9 +60,15 @@
                     I.I.StateMachine.ChangeState(XI.StateVDodge);
                 }
 
-                if (false && CanWaterRun()) // TODO: enable when implemented
+                if (CanWaterRun())
                 {
                     I.I.StateMachine.ChangeState(XI.StateWaterRun);
+                }
+                else if (CanWaterRunJump())
+                {
+                    Debug.Log("Performing water run jump!");
+                    I.I.StateMachine.ChangeState(I.I.GetState("StateJump"));
+                    XDebug.Comment("actually this also works with sonic and effectively replaces his seperate if-check for jumping in his own Update() function");
                 }
             }
         }

@@ -11,12 +11,27 @@
         public static bool CanWaterRun()
         {
             if (!CheckGameState()) return false;
-            if (WaterRun.isWaterRunning) return false; ;
+            if (WaterRun.isWaterRunning) return false;
+            if (I.I.IsGrounded()) return false;
             //if (I.I.GetPrefab("snow_board")) return false;
 
             Vector3 vector = default(Vector3);
             bool is_falling_and_fast_enough = I.I._Rigidbody.velocity.y < 0f && I.Flt["CurSpeed"] > WaterRun.MinActivationSpeed;
             return is_falling_and_fast_enough && HasWaterBelow(WaterRun.YMaxWaterRaycastDist, ref vector);
+        }
+
+        // Can jump (when performing water run)?
+        public static bool CanWaterRunJump()
+        {
+            return WaterRun.isWaterRunning && XInput.Controls.GetButtonDown("Button A");
+        }
+
+        private static void logAllColliders(RaycastHit[] hits)
+        {
+            foreach (var hit in hits)
+            {
+                Debug.Log($"Hit collider: {hit.collider.name}, tag: {hit.transform.tag}");
+            }
         }
 
         public static bool HasWaterBelow(float maxDist, out RaycastHit waterHit)
@@ -46,6 +61,7 @@
                     break;
                 }
             }
+            if (flag) logAllColliders(array);
             return flag;
         }
 
@@ -53,6 +69,7 @@
         {
             public static bool isWaterRunning;
 
+            // Configuration
             public static float YWaterOffset = 0.5f;
             public static float YMaxWaterRaycastDist = 0.501f;
 
@@ -63,114 +80,118 @@
 
             public static float MinRunAnimationSpeed = 27f;
             public static float RunningBrakeSpeed = 25f;
+
+            // Instance state
+            public static float WSTime;
+            public static float FWSpeedBegin;
+            public static float FWSpeedTarget;
+            public static float WSpeed;
         }
-
-        //private void X_StateFreeWaterSlideStart()
-        //{
-        //    this.SetState("WaterSlide");
-        //    this.LockControls = true;
-        //    this.X_WSTime = Time.time;
-        //    this.X_FWSpeedBegin = this.CurSpeed;
-        //    this.X_FWSpeedTarget = Mathf.Min(Sonic_New_Lua.c_run_speed_max * 3f, this.CurSpeed * XDebug.Cfg.FWS.SpeedBoost);
-        //    this.X_WSpeed = this.CurSpeed;
-        //    XDebug.Comment("maybe also lerp offset");
-        //}
-
-        //private void X_StateFreeWaterSlide()
-        //{
-        //    RaycastHit raycastHit;
-        //    bool flag = this.X_HasWaterBelow(XDebug.Cfg.FWS.YMaxWaterRaycastDist, out raycastHit);
-        //    Vector3 point = raycastHit.point;
-        //    Vector3 normal = raycastHit.normal;
-        //    bool flag2 = this.IsGrounded();
-        //    Vector3 point2 = this.RaycastHit.point;
-        //    if (!flag && !flag2)
-        //    {
-        //        this.X_SwitchToState("StateAir");
-        //        return;
-        //    }
-        //    if (flag2 && !flag)
-        //    {
-        //        this.X_SwitchToState("StateGround");
-        //        return;
-        //    }
-        //    if (flag2 && flag)
-        //    {
-        //        float num = Vector3.Distance(base.transform.position, point);
-        //        if (Vector3.Distance(base.transform.position, point2) < num)
-        //        {
-        //            this.X_SwitchToState("StateGround");
-        //            return;
-        //        }
-        //    }
-        //    base.transform.position += new Vector3(0f, -base.transform.position.y + point.y + XDebug.Cfg.FWS.YWaterOffset, 0f);
-        //    base.transform.rotation = Quaternion.FromToRotation(base.transform.up, normal) * base.transform.rotation;
-        //    XDebug.Comment("if we somehow accelerated");
-        //    if (this.CurSpeed > this.X_WSpeed)
-        //    {
-        //        this.X_FWSpeedTarget = (this.X_FWSpeedBegin = (this.X_WSpeed = this.CurSpeed));
-        //    }
-        //    if (Time.time - this.X_WSTime <= XDebug.Cfg.FWS.AccelTime)
-        //    {
-        //        float num2 = (Time.time - this.X_WSTime) / XDebug.Cfg.FWS.AccelTime;
-        //        this.X_WSpeed = Mathf.Lerp(this.X_FWSpeedBegin, this.X_FWSpeedTarget, Mathf.Sqrt(num2));
-        //    }
-        //    else if (this.X_WSpeed > 0f)
-        //    {
-        //        this.X_WSpeed -= 2f * Time.fixedDeltaTime;
-        //    }
-        //    if (this.X_WSpeed <= 5f)
-        //    {
-        //        this.StateMachine.ChangeState((StateMachine.PlayerState)base.GetType().GetMethod("StateAir", BindingFlags.Instance | BindingFlags.NonPublic).CreateDelegate(typeof(StateMachine.PlayerState), this));
-        //        return;
-        //    }
-        //    XDebug.Comment("Extra slowdown when 'running'");
-        //    if (this.X_WSpeed > XDebug.Cfg.FWS.MinRunAnimationSpeed && Singleton<RInput>.Instance.P.GetAxis("Left Stick Y") <= 0f)
-        //    {
-        //        this.X_WSpeed -= XDebug.Cfg.FWS.RunningBrakeSpeed * Time.fixedDeltaTime;
-        //    }
-        //    this.X_StateFreeWaterSlideSetAnimation();
-        //    this.CurSpeed = this.X_WSpeed;
-        //    this.GeneralMeshRotation = Quaternion.LookRotation(this.ForwardMeshRotation, this.UpMeshRotation);
-        //    this._Rigidbody.velocity = base.transform.forward * this.X_WSpeed;
-        //}
-
-        //private void X_StateFreeWaterSlideEnd()
-        //{
-        //    this.MaxRayLenght = 0.75f;
-        //    this.LockControls = false;
-        //}
-
-        //private void X_StateFreeWaterSlideSetAnimation()
-        //{
-        //    if (this.X_WSpeed <= 8f)
-        //    {
-        //        this.PlayAnimation("Edge Danger", "On Edge Danger");
-        //        return;
-        //    }
-        //    if (this.X_WSpeed <= XDebug.Cfg.FWS.MinRunAnimationSpeed)
-        //    {
-        //        this.Animator.CrossFadeInFixedTime("Brake", 0.04f);
-        //        return;
-        //    }
-        //    this.PlayAnimation("Movement (Blend Tree)", "On Ground");
-        //}
-
 
         public void StateWaterRunStart()
         {
-            // rewrite the X_StateFreeWaterSlideStart() function here
+            Debug.Log($"State Water Run Start Time : {Time.time}");
             WaterRun.isWaterRunning = true;
+            I.I.SetState("Path");
             I.Boo["LockControls"] = true;
-
+            WaterRun.WSTime = Time.time;
+            WaterRun.FWSpeedBegin = I.Flt["CurSpeed"];
+            WaterRun.FWSpeedTarget = Mathf.Min(I.Flt["TopSpeed"] * 3f, I.Flt["CurSpeed"] * WaterRun.SpeedBoost);
+            WaterRun.WSpeed = I.Flt["CurSpeed"];
         }
+
         public void StateWaterRun()
         {
+            RaycastHit raycastHit;
+            bool hasWater = HasWaterBelow(WaterRun.YMaxWaterRaycastDist, out raycastHit);
+            Vector3 waterPoint = raycastHit.point;
+            Vector3 waterNormal = raycastHit.normal;
+            bool isGrounded = I.I.IsGrounded();
+            Vector3 groundPoint = I.RcH["RaycastHit"].point;
 
+            // Exit conditions
+            if (!hasWater && !isGrounded)
+            {
+                I.I.StateMachine.ChangeState(I.I.GetState("StateAir"));
+                return;
+            }
+            if (isGrounded && !hasWater)
+            {
+                I.I.StateMachine.ChangeState(I.I.GetState("StateGround"));
+                return;
+            }
+            if (isGrounded && hasWater)
+            {
+                float waterDist = Vector3.Distance(I.I.transform.position, waterPoint);
+                if (Vector3.Distance(I.I.transform.position, groundPoint) < waterDist)
+                {
+                    I.I.StateMachine.ChangeState(I.I.GetState("StateGround"));
+                    return;
+                }
+            }
+
+            // Snap to water surface
+            I.I.transform.position += new Vector3(0f, -I.I.transform.position.y + waterPoint.y + WaterRun.YWaterOffset, 0f);
+            I.I.transform.rotation = Quaternion.FromToRotation(I.I.transform.up, waterNormal) * I.I.transform.rotation;
+
+            // If we somehow accelerated (e.g. from a booster)
+            if (I.Flt["CurSpeed"] > WaterRun.WSpeed)
+            {
+                WaterRun.FWSpeedTarget = (WaterRun.FWSpeedBegin = (WaterRun.WSpeed = I.Flt["CurSpeed"]));
+            }
+
+            // Speed: accelerate during AccelTime, then decelerate
+            if (Time.time - WaterRun.WSTime <= WaterRun.AccelTime)
+            {
+                float t = (Time.time - WaterRun.WSTime) / WaterRun.AccelTime;
+                WaterRun.WSpeed = Mathf.Lerp(WaterRun.FWSpeedBegin, WaterRun.FWSpeedTarget, Mathf.Sqrt(t));
+            }
+            else if (WaterRun.WSpeed > 0f)
+            {
+                WaterRun.WSpeed -= 2f * Time.fixedDeltaTime;
+            }
+
+            // Too slow — fall into water
+            if (WaterRun.WSpeed <= 5f)
+            {
+                I.I.StateMachine.ChangeState(I.I.GetState("StateAir"));
+                return;
+            }
+
+            // Extra slowdown when not pushing forward
+            if (WaterRun.WSpeed > WaterRun.MinRunAnimationSpeed
+                && Singleton<RInput>.Instance.Get<Rewired.Player>("P").GetAxis("Left Stick Y") <= 0f)
+            {
+                WaterRun.WSpeed -= WaterRun.RunningBrakeSpeed * Time.fixedDeltaTime;
+            }
+
+            StateWaterRunSetAnimation();
+            I.Flt["CurSpeed"] = WaterRun.WSpeed;
+            I.Qua["GeneralMeshRotation"] = Quaternion.LookRotation(I.Vec["ForwardMeshRotation"], I.Vec["UpMeshRotation"]);
+            I.I._Rigidbody.velocity = I.I.transform.forward * WaterRun.WSpeed;
         }
+
         public void StateWaterRunEnd()
         {
+            Debug.Log($"Water Run End time : {Time.time}");
+            WaterRun.isWaterRunning = false;
+            I.Flt["MaxRayLenght"] = 0.75f;
+            I.Boo["LockControls"] = false;
+        }
 
+        private void StateWaterRunSetAnimation()
+        {
+            if (WaterRun.WSpeed <= 8f)
+            {
+                I.I.PlayAnimation("Edge Danger", "On Edge Danger");
+                return;
+            }
+            if (WaterRun.WSpeed <= WaterRun.MinRunAnimationSpeed)
+            {
+                I.I.Get<Animator>("Animator").CrossFadeInFixedTime("Brake", 0.04f);
+                return;
+            }
+            I.I.PlayAnimation("Movement (Blend Tree)", "On Ground");
         }
     }
 }
