@@ -79,7 +79,11 @@ namespace P06X
             foreach (ParticleSystem ps in WaterRunFX)
             {
                 if (ps != null && !ps.isPlaying)
+                {
+                    var emission = ps.emission;
+                    emission.enabled = true;
                     ps.Play();
+                }
             }
         }
 
@@ -89,7 +93,10 @@ namespace P06X
             foreach (ParticleSystem ps in _waterRunFX)
             {
                 if (ps != null && ps.isPlaying)
+                {
+                    //ps.emission.enabled = false;
                     ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                }
             }
         }
     }

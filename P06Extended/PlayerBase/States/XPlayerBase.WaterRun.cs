@@ -191,7 +191,15 @@
                 I.I.Get<Animator>("Animator").CrossFadeInFixedTime("Brake", 0.04f);
                 return;
             }
-            I.I.PlayAnimation("Movement (Blend Tree)", "On Ground");
+
+            if (I.I.GetPrefab("snow_board"))
+            {
+                I.I.PlayAnimation("Board", "On Board");
+            }
+            else
+            {
+                I.I.PlayAnimation("Movement (Blend Tree)", "On Ground");
+            }
         }
     }
 }
