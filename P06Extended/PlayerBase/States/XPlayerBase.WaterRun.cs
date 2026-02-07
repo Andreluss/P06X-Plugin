@@ -8,10 +8,31 @@
 
     public partial class XPlayerBase : MonoBehaviour
     {
+        public class WaterRun
+        {
+            // Static configuration
+            public static readonly float YWaterOffset = 0.5f;
+            public static readonly float YMaxWaterRaycastDist = 0.501f;
+            public static readonly float MinActivationSpeed = 8.5f;
+            public static readonly float SpeedBoost = 1.25f;
+            public static readonly float AccelTime = 0.65f;
+            public static readonly float MinRunAnimationSpeed = 27f;
+            public static readonly float RunningBrakeSpeed = 25f;
+
+            // Instance state
+            public bool active;
+            public float WSTime;
+            public float FWSpeedBegin;
+            public float FWSpeedTarget;
+            public float WSpeed;
+        }
+
+        public WaterRun WaterRunState = new WaterRun();
+
         public static bool CanWaterRun()
         {
             if (!CheckGameState()) return false;
-            if (WaterRun.isWaterRunning) return false;
+            if (XI.WaterRunState.active) return false;
             if (I.I.IsGrounded()) return false;
             //if (I.I.GetPrefab("snow_board")) return false;
 
@@ -23,7 +44,7 @@
         // Can jump (when performing water run)?
         public static bool CanWaterRunJump()
         {
-            return WaterRun.isWaterRunning && XInput.Controls.GetButtonDown("Button A");
+            return XI.WaterRunState.active && XInput.Controls.GetButtonDown("Button A");
         }
 
         private static void logAllColliders(RaycastHit[] hits)
@@ -65,39 +86,18 @@
             return flag;
         }
 
-        public static class WaterRun
-        {
-            public static bool isWaterRunning;
-
-            // Configuration
-            public static float YWaterOffset = 0.5f;
-            public static float YMaxWaterRaycastDist = 0.501f;
-
-            public static float MinActivationSpeed = 8.5f;
-
-            public static float SpeedBoost = 1.25f;
-            public static float AccelTime = 0.65f;
-
-            public static float MinRunAnimationSpeed = 27f;
-            public static float RunningBrakeSpeed = 25f;
-
-            // Instance state
-            public static float WSTime;
-            public static float FWSpeedBegin;
-            public static float FWSpeedTarget;
-            public static float WSpeed;
-        }
-
         public void StateWaterRunStart()
         {
             Debug.Log($"State Water Run Start Time : {Time.time}");
-            WaterRun.isWaterRunning = true;
+            WaterRunState.active = true;
             I.I.SetState("Path");
             I.Boo["LockControls"] = true;
-            WaterRun.WSTime = Time.time;
-            WaterRun.FWSpeedBegin = I.Flt["CurSpeed"];
-            WaterRun.FWSpeedTarget = Mathf.Min(I.Flt["TopSpeed"] * 3f, I.Flt["CurSpeed"] * WaterRun.SpeedBoost);
-            WaterRun.WSpeed = I.Flt["CurSpeed"];
+            WaterRunState.WSTime = Time.time;
+            WaterRunState.FWSpeedBegin = I.Flt["CurSpeed"];
+            // all characters need to be as fast when on water 
+            float sonicRunSpeedMax = ReflectionExtensions.GetLuaStruct("Sonic_New_Lua").Get<float>("c_run_speed_max");
+            WaterRunState.FWSpeedTarget = Mathf.Min(sonicRunSpeedMax * 3f, I.Flt["CurSpeed"] * WaterRun.SpeedBoost);
+            WaterRunState.WSpeed = I.Flt["CurSpeed"];
         }
 
         public void StateWaterRun()
@@ -135,58 +135,58 @@
             I.I.transform.rotation = Quaternion.FromToRotation(I.I.transform.up, waterNormal) * I.I.transform.rotation;
 
             // If we somehow accelerated (e.g. from a booster)
-            if (I.Flt["CurSpeed"] > WaterRun.WSpeed)
+            if (I.Flt["CurSpeed"] > WaterRunState.WSpeed)
             {
-                WaterRun.FWSpeedTarget = (WaterRun.FWSpeedBegin = (WaterRun.WSpeed = I.Flt["CurSpeed"]));
+                WaterRunState.FWSpeedTarget = (WaterRunState.FWSpeedBegin = (WaterRunState.WSpeed = I.Flt["CurSpeed"]));
             }
 
             // Speed: accelerate during AccelTime, then decelerate
-            if (Time.time - WaterRun.WSTime <= WaterRun.AccelTime)
+            if (Time.time - WaterRunState.WSTime <= WaterRun.AccelTime)
             {
-                float t = (Time.time - WaterRun.WSTime) / WaterRun.AccelTime;
-                WaterRun.WSpeed = Mathf.Lerp(WaterRun.FWSpeedBegin, WaterRun.FWSpeedTarget, Mathf.Sqrt(t));
+                float t = (Time.time - WaterRunState.WSTime) / WaterRun.AccelTime;
+                WaterRunState.WSpeed = Mathf.Lerp(WaterRunState.FWSpeedBegin, WaterRunState.FWSpeedTarget, Mathf.Sqrt(t));
             }
-            else if (WaterRun.WSpeed > 0f)
+            else if (WaterRunState.WSpeed > 0f)
             {
-                WaterRun.WSpeed -= 2f * Time.fixedDeltaTime;
+                WaterRunState.WSpeed -= 2f * Time.fixedDeltaTime;
             }
 
             // Too slow — fall into water
-            if (WaterRun.WSpeed <= 5f)
+            if (WaterRunState.WSpeed <= 5f)
             {
                 I.I.StateMachine.ChangeState(I.I.GetState("StateAir"));
                 return;
             }
 
             // Extra slowdown when not pushing forward
-            if (WaterRun.WSpeed > WaterRun.MinRunAnimationSpeed
+            if (WaterRunState.WSpeed > WaterRun.MinRunAnimationSpeed
                 && Singleton<RInput>.Instance.Get<Rewired.Player>("P").GetAxis("Left Stick Y") <= 0f)
             {
-                WaterRun.WSpeed -= WaterRun.RunningBrakeSpeed * Time.fixedDeltaTime;
+                WaterRunState.WSpeed -= WaterRun.RunningBrakeSpeed * Time.fixedDeltaTime;
             }
 
             StateWaterRunSetAnimation();
-            I.Flt["CurSpeed"] = WaterRun.WSpeed;
+            I.Flt["CurSpeed"] = WaterRunState.WSpeed;
             I.Qua["GeneralMeshRotation"] = Quaternion.LookRotation(I.Vec["ForwardMeshRotation"], I.Vec["UpMeshRotation"]);
-            I.I._Rigidbody.velocity = I.I.transform.forward * WaterRun.WSpeed;
+            I.I._Rigidbody.velocity = I.I.transform.forward * WaterRunState.WSpeed;
         }
 
         public void StateWaterRunEnd()
         {
             Debug.Log($"Water Run End time : {Time.time}");
-            WaterRun.isWaterRunning = false;
+            WaterRunState.active = false;
             I.Flt["MaxRayLenght"] = 0.75f;
             I.Boo["LockControls"] = false;
         }
 
         private void StateWaterRunSetAnimation()
         {
-            if (WaterRun.WSpeed <= 8f)
+            if (WaterRunState.WSpeed <= 8f)
             {
                 I.I.PlayAnimation("Edge Danger", "On Edge Danger");
                 return;
             }
-            if (WaterRun.WSpeed <= WaterRun.MinRunAnimationSpeed)
+            if (WaterRunState.WSpeed <= WaterRun.MinRunAnimationSpeed)
             {
                 I.I.Get<Animator>("Animator").CrossFadeInFixedTime("Brake", 0.04f);
                 return;
