@@ -94,10 +94,9 @@
             I.Boo["LockControls"] = true;
             WaterRunState.WSTime = Time.time;
             WaterRunState.FWSpeedBegin = I.Flt["CurSpeed"];
-            // all characters need to be as fast when on water 
-            float sonicRunSpeedMax = ReflectionExtensions.GetLuaStruct("Sonic_New_Lua").Get<float>("c_run_speed_max");
-            WaterRunState.FWSpeedTarget = Mathf.Min(sonicRunSpeedMax * 3f, I.Flt["CurSpeed"] * WaterRun.SpeedBoost);
+            WaterRunState.FWSpeedTarget = Mathf.Min(I.Flt["TopSpeed"] * 3f, I.Flt["CurSpeed"] * WaterRun.SpeedBoost);
             WaterRunState.WSpeed = I.Flt["CurSpeed"];
+            PlayWaterRunFX();
         }
 
         public void StateWaterRun()
@@ -177,6 +176,7 @@
             WaterRunState.active = false;
             I.Flt["MaxRayLenght"] = 0.75f;
             I.Boo["LockControls"] = false;
+            StopWaterRunFX();
         }
 
         private void StateWaterRunSetAnimation()
