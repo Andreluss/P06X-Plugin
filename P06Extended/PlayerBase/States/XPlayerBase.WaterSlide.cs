@@ -22,6 +22,7 @@
             XI.WaterSlideState.WSSpline = I.I.GetSpline(XI.WaterSlideState.LaunchMode);
             XI.WaterSlideState.WSPositionShift = 0f;
             I.Flt["MaxRayLenght"] = 0.55f;
+            PlayWaterRunFX();
         }
 
         public void StateWaterSlide()
@@ -83,7 +84,7 @@
         {
             XI.WaterSlideState.active = false;
             I.Flt["MaxRayLenght"] = 0.75f;
+            StopWaterRunFX();
         }
-
     }
 }

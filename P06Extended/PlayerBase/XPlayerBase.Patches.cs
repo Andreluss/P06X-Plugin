@@ -64,12 +64,6 @@
                 {
                     I.I.StateMachine.ChangeState(XI.StateWaterRun);
                 }
-                else if (CanWaterRunJump())
-                {
-                    Debug.Log("Performing water run jump!");
-                    I.I.StateMachine.ChangeState(I.I.GetState("StateJump"));
-                    XDebug.Comment("actually this also works with sonic and effectively replaces his seperate if-check for jumping in his own Update() function");
-                }
             }
         }
     }

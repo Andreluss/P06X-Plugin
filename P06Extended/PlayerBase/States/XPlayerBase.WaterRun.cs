@@ -1,10 +1,8 @@
 ﻿namespace P06X
 {
-    using HarmonyLib;
-    using UnityEngine;
     using Helpers;
+    using UnityEngine;
     using UnityEngine.Assertions;
-    using System;
 
     public partial class XPlayerBase : MonoBehaviour
     {
@@ -14,10 +12,11 @@
             public static readonly float YWaterOffset = 0.5f;
             public static readonly float YMaxWaterRaycastDist = 0.501f;
             public static readonly float MinActivationSpeed = 8.5f;
-            public static readonly float SpeedBoost = 1.25f;
+            public static readonly float SpeedBoost = 1.5f;
             public static readonly float AccelTime = 0.65f;
             public static readonly float MinRunAnimationSpeed = 27f;
             public static readonly float RunningBrakeSpeed = 25f;
+            public static readonly float RotationLerpSpeed = 5f;
 
             // Instance state
             public bool active;
@@ -39,12 +38,6 @@
             Vector3 vector = default(Vector3);
             bool is_falling_and_fast_enough = I.I._Rigidbody.velocity.y < 0f && I.Flt["CurSpeed"] > WaterRun.MinActivationSpeed;
             return is_falling_and_fast_enough && HasWaterBelow(WaterRun.YMaxWaterRaycastDist, ref vector);
-        }
-
-        // Can jump (when performing water run)?
-        public static bool CanWaterRunJump()
-        {
-            return XI.WaterRunState.active && XInput.Controls.GetButtonDown("Button A");
         }
 
         private static void logAllColliders(RaycastHit[] hits)
@@ -90,7 +83,7 @@
         {
             Debug.Log($"State Water Run Start Time : {Time.time}");
             WaterRunState.active = true;
-            I.I.SetState("Path");
+            I.I.SetState("Ground");
             I.Boo["LockControls"] = true;
             WaterRunState.WSTime = Time.time;
             WaterRunState.FWSpeedBegin = I.Flt["CurSpeed"];
@@ -111,12 +104,12 @@
             // Exit conditions
             if (!hasWater && !isGrounded)
             {
-                I.I.StateMachine.ChangeState(I.I.GetState("StateAir"));
+                I.I.SetMachineState("StateAir");
                 return;
             }
             if (isGrounded && !hasWater)
             {
-                I.I.StateMachine.ChangeState(I.I.GetState("StateGround"));
+                I.I.SetMachineState("StateGround");
                 return;
             }
             if (isGrounded && hasWater)
@@ -124,7 +117,7 @@
                 float waterDist = Vector3.Distance(I.I.transform.position, waterPoint);
                 if (Vector3.Distance(I.I.transform.position, groundPoint) < waterDist)
                 {
-                    I.I.StateMachine.ChangeState(I.I.GetState("StateGround"));
+                    I.I.SetMachineState("StateGround");
                     return;
                 }
             }
@@ -153,7 +146,7 @@
             // Too slow — fall into water
             if (WaterRunState.WSpeed <= 5f)
             {
-                I.I.StateMachine.ChangeState(I.I.GetState("StateAir"));
+                I.I.SetMachineState("StateAir");
                 return;
             }
 
@@ -164,10 +157,25 @@
                 WaterRunState.WSpeed -= WaterRun.RunningBrakeSpeed * Time.fixedDeltaTime;
             }
 
+            RotateIfSnowBoard();
             StateWaterRunSetAnimation();
             I.Flt["CurSpeed"] = WaterRunState.WSpeed;
             I.Qua["GeneralMeshRotation"] = Quaternion.LookRotation(I.Vec["ForwardMeshRotation"], I.Vec["UpMeshRotation"]);
             I.I._Rigidbody.velocity = I.I.transform.forward * WaterRunState.WSpeed;
+        }
+
+        public void RotateIfSnowBoard()
+        {
+            if (!I.I.GetPrefab("snow_board")) return;
+            var snowboard = I.I as SnowBoard;
+            Assert.IsNotNull(snowboard);
+            var targetDirection = snowboard.Get<Vector3>("TargetDirection");
+            if (targetDirection != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(targetDirection, snowboard.transform.up);
+                snowboard.transform.rotation = Quaternion.Slerp(
+                    snowboard.transform.rotation, targetRotation, Time.fixedDeltaTime * WaterRun.RotationLerpSpeed);
+            }
         }
 
         public void StateWaterRunEnd()
@@ -179,22 +187,33 @@
             StopWaterRunFX();
         }
 
-        private void StateWaterRunSetAnimation()
+        private void StateWaterRunSetAnimationSnowboard()
         {
             if (WaterRunState.WSpeed <= 8f)
             {
-                I.I.PlayAnimation("Edge Danger", "On Edge Danger");
-                return;
+                I.I.PlayAnimation("Grind", "On Grind");
             }
-            if (WaterRunState.WSpeed <= WaterRun.MinRunAnimationSpeed)
+            else
             {
-                I.I.Get<Animator>("Animator").CrossFadeInFixedTime("Brake", 0.04f);
+                I.I.PlayAnimation("Board", "On Board");
+            }
+        }
+
+        private void StateWaterRunSetAnimation()
+        {
+            if (I.I.GetPrefab("snow_board"))
+            {
+                StateWaterRunSetAnimationSnowboard();
                 return;
             }
 
-            if (I.I.GetPrefab("snow_board"))
+            if (WaterRunState.WSpeed <= 8f)
             {
-                I.I.PlayAnimation("Board", "On Board");
+                I.I.PlayAnimation("Edge Danger", "On Edge Danger");
+            }
+            else if (WaterRunState.WSpeed <= WaterRun.MinRunAnimationSpeed)
+            {
+                I.I.Get<Animator>("Animator").CrossFadeInFixedTime("Brake", 0.04f);
             }
             else
             {
