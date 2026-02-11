@@ -17,10 +17,27 @@ namespace P06X.Helpers
             return (T)(obj.GetField(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(obj));
         }
 
+        /// <summary>
+        /// Get e.g. STHLua.Sonic_New_Lua type
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public static Type GetLuaStruct(string name)
         {
             Assembly ass = Assembly.GetAssembly(typeof(SonicNew));
             return ass.GetType("STHLua." + name);
+        }
+
+        /// <summary>
+        /// Get e.g. STHLua.Sonic_New_Lua.c_boundattack_collision type
+        /// </summary>
+        /// <param name="luaStructName"></param>
+        /// <param name="nestedStructName"></param>
+        /// <returns></returns>
+        public static Type GetLuaStruct(string luaStructName, string nestedStructName)
+        {
+            Assembly ass = Assembly.GetAssembly(typeof(SonicNew));
+            return ass.GetType("STHLua." + luaStructName).GetNestedType(nestedStructName);
         }
 
         public static T Set<T>(this Type typeObj, string name, T value)

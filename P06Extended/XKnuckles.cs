@@ -14,6 +14,19 @@ namespace P06X
     public class XKnuckles : MonoBehaviour // should be a generic character patch subclass (for the future) - todo
     {
         public static XKnuckles XI;
+        //public class IKnuckles : ReflectionAccessor<Knuckles>
+        //{
+        //    public ReflectionWrapper<RaycastHit> RcH;
+        //    public PlayerCamera Camera;
+        //    public StageManager StageManager;
+
+        //    public IKnuckles(Knuckles knuckles) : base(knuckles)
+        //    {
+        //        RcH = new ReflectionWrapper<RaycastHit>(knuckles);
+        //        Camera = knuckles.Get<PlayerCamera>("Camera");
+        //        StageManager = knuckles.Get<StageManager>("StageManager");
+        //    }
+        //}
         public class IKnuckles
         {
             public Knuckles I;

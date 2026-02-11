@@ -54,6 +54,7 @@ namespace P06X
 
             if (II.IsGrounded() && II.InvokeFunc<bool>("ShouldAlignOrFall", false))
             {
+                // audio (optional) todo
                 II.InvokeFunc<bool>("AttackSphere_Dir", II.transform.position, 1f * 2f, 30f, 1);
                 float axis = XInput.Controls.GetAxis("Left Stick Y");
                 float axis2 = XInput.Controls.GetAxis("Left Stick X");

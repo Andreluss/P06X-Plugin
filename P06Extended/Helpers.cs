@@ -6,6 +6,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using UnityEngine;
 
     public class XInput
     {
@@ -244,6 +245,32 @@
         public static IEnumerable<T> GetValues<T>()
         {
             return Enum.GetValues(typeof(T)).Cast<T>();
+        }
+    }
+
+    /// <summary>
+    /// Base class with common ReflectionWrapper fields for any game character.
+    /// Subclass and add character-specific fields as needed.
+    /// </summary>
+    public class ReflectionAccessor<TCharacter>
+    {
+        public TCharacter I;
+        public ReflectionWrapper<int> Int;
+        public ReflectionWrapper<float> Flt;
+        public ReflectionWrapper<bool> Boo;
+        public ReflectionWrapper<Vector3> Vec;
+        public ReflectionWrapper<Quaternion> Qua;
+        public ReflectionWrapper<PlayerCamera> PCa;
+
+        public ReflectionAccessor(TCharacter instance)
+        {
+            I = instance;
+            Int = new ReflectionWrapper<int>(instance);
+            Flt = new ReflectionWrapper<float>(instance);
+            Boo = new ReflectionWrapper<bool>(instance);
+            Vec = new ReflectionWrapper<Vector3>(instance);
+            Qua = new ReflectionWrapper<Quaternion>(instance);
+            PCa = new ReflectionWrapper<PlayerCamera>(instance);
         }
     }
 

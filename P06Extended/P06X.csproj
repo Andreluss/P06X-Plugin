@@ -123,6 +123,10 @@
     <Compile Include="PlayerBase\States\XPlayerBase.WallJump.Helpers.cs" />
     <Compile Include="PlayerBase\States\XPlayerBase.WallJump.cs" />
     <Compile Include="PlayerBase\XPlayerBase.Patches.cs" />
+    <Compile Include="Shadow\States\XShadow.GetUpX.cs" />
+    <Compile Include="Shadow\States\XShadow.Stomp.cs" />
+    <Compile Include="Shadow\XShadow.cs" />
+    <Compile Include="Shadow\XShadow.Patches.cs" />
     <Compile Include="SonicNew\States\XSonicNew.GetUpX.cs" />
     <Compile Include="SonicNew\States\XSonicNew.Stomp.cs" />
     <Compile Include="SonicNew\XSonicNew.Patches.cs" />
