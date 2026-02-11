@@ -17,13 +17,11 @@
 
         public class IPlayerBase : ReflectionAccessor<PlayerBase>
         {
-            public ReflectionWrapper<RaycastHit> RcH;
             public PlayerCamera Camera;
             public StageManager StageManager;
 
             public IPlayerBase(PlayerBase playerBase) : base(playerBase)
             {
-                RcH = new ReflectionWrapper<RaycastHit>(playerBase);
                 Camera = playerBase.Get<PlayerCamera>("Camera");
                 StageManager = playerBase.Get<StageManager>("StageManager");
             }
