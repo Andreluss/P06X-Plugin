@@ -68,6 +68,21 @@ namespace P06X.Helpers
             return state as StateMachine.PlayerState;
         }
 
+        public static void InvokeFuncVoid(this object obj, string methodName, params object[] args)
+        {
+            MethodInfo method = obj.GetType().GetMethod(
+               methodName,
+               BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
+               null,
+               args.Select(a => a.GetType()).ToArray(),
+               null);
+
+            if (method == null)
+                throw new Exception($"Method '{methodName}' not found on type '{obj.GetType().FullName}'");
+
+            method.Invoke(obj, args);
+        }
+
         public static T InvokeFunc<T>(this object obj, string methodName, params object[] args)
         {
             MethodInfo method = obj.GetType().GetMethod(

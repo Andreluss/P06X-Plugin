@@ -45,7 +45,7 @@
         {
             return GameManager.Instance.GameState != GameManager.State.Paused &&
                    I.I.Get<StageManager>("StageManager")
-                       .Get<StageManager.State>("StageState") != StageManager.State.Event &&
+                      .Get<StageManager.State>("StageState") != StageManager.State.Event &&
                    !I.Boo["IsDead"] && I.I.GetState() != "Talk";
         }
     }

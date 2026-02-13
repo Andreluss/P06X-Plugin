@@ -127,6 +127,7 @@
     <Compile Include="Shadow\States\XShadow.Stomp.cs" />
     <Compile Include="Shadow\XShadow.cs" />
     <Compile Include="Shadow\XShadow.Patches.cs" />
+    <Compile Include="SonicFast\States\XSonicFast.SecondJump.cs" />
     <Compile Include="SonicNew\States\XSonicNew.GetUpX.cs" />
     <Compile Include="SonicFast\States\XSonicFast.Stomp.cs" />
     <Compile Include="SonicFast\XSonicFast.cs" />

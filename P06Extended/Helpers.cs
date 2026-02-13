@@ -6,6 +6,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Security.Policy;
     using UnityEngine;
 
     public class XInput
@@ -252,7 +253,7 @@
     /// Base class with common ReflectionWrapper fields for any game character.
     /// Subclass and add character-specific fields as needed.
     /// </summary>
-    public class ReflectionAccessor<TCharacter>
+    public class ReflectionAccessor<TCharacter> where TCharacter : PlayerBase
     {
         public TCharacter I;
         public ReflectionWrapper<int> Int;
@@ -274,6 +275,17 @@
             PCa = new ReflectionWrapper<PlayerCamera>(instance);
             RcH = new ReflectionWrapper<RaycastHit>(instance);
         }
-    }
 
+        /// <summary>
+        /// Returns if the game is in normal state - not curscene, pause, animation etc.
+        /// </summary>
+        /// <returns></returns>
+        public bool CheckGameState()
+        {
+            return GameManager.Instance.GameState != GameManager.State.Paused &&
+                  I.Get<StageManager>("StageManager")
+                     .Get<StageManager.State>("StageState") != StageManager.State.Event &&
+                  !Boo["IsDead"] && I.GetState() != "Talk";
+        }
+    }
 }

@@ -44,7 +44,7 @@
                 bool cond2 = __instance.Get<SonicFast.State>("PlayerState").IsInList(
                                 SonicFast.State.Spring, SonicFast.State.WideSpring, SonicFast.State.JumpPanel,
                                 SonicFast.State.RainbowRing)
-                                && !__instance.Get<bool>("LockControls") ||
+                                && !__instance.Get<bool>("LockControls") || 
                              __instance.Get<SonicFast.State>("PlayerState").IsInList(
                                 SonicFast.State.Jump, SonicFast.State.Air) ||
                              __instance.Get<SonicFast.State>("PlayerState") == SonicFast.State.BoundAttack 
@@ -52,6 +52,7 @@
 
                 return cond1 && cond2;
             }
+
             
             public static void Postfix(SonicFast __instance)
             {
@@ -63,6 +64,10 @@
                 if (CanStomp(__instance))
                 {
                     __instance.StateMachine.ChangeState(XI.StateStomp);
+                }
+                else if (CanSecondJump(__instance))
+                {
+                    __instance.StateMachine.ChangeState(XI.StateSecondJump);
                 }
             }
         }

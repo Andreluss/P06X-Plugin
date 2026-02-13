@@ -2177,7 +2177,7 @@ namespace P06X
 
                 public static float HueShift = -0.25f;
 
-                public static float Offset = -0.1f;
+                public static float Offset = -0.4f;
             }
 
             public struct WJ
@@ -2734,7 +2734,7 @@ namespace P06X
             {
                 gameObject = UnityEngine.Object.Instantiate<GameObject>(this.SecondJumpFXPrefab, transform.position, Quaternion.identity);
             }
-            gameObject.transform.position += -Vector3.up * XDebug.Cfg.MachSpeedSecondJump.Offset;
+            gameObject.transform.position += Vector3.up * XDebug.Cfg.MachSpeedSecondJump.Offset;
             ParticleSystem[] componentsInChildren = gameObject.GetComponentsInChildren<ParticleSystem>();
             for (int i = 0; i < componentsInChildren.Length; i++)
             {
