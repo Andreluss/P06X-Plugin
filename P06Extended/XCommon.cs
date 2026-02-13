@@ -7,10 +7,10 @@ namespace P06X
     public class XCommon
     {
         public static bool Dbg = false;
-        public static string Version = "2.0.beta";
+        public static string Version = "2.1";
         public static string ModFilesPath = Application.dataPath + "/../Plugins/P06X/";
 
-        public static void TeleportToSection(string section)
+        public static void TeleportToSection(string section) 
         {
             if (!String.IsNullOrEmpty(section))
             {

@@ -65,5 +65,24 @@
                 }
             }
         }
+
+
+        [HarmonyPatch(typeof(Shadow), "StateAfterHoming")]
+        public class Shadow_StateAfterHoming
+        {
+            private static float CurSpeed = 0.0f;
+            public static void Prefix(Shadow __instance)
+            {
+                CurSpeed = I.Flt["CurSpeed"];
+            }
+
+            public static void Postfix(Shadow __instance)
+            {
+                if (XDebug.Instance.Moveset_AHMovement.Value)
+                {
+                    I.Flt["CurSpeed"] = Mathf.Min(CurSpeed, XDebug.Instance.Moveset_AHMovementMaxSpeed.Value);
+                }
+            }
+        }
     }
 }

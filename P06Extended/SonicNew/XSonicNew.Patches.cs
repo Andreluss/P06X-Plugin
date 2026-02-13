@@ -27,6 +27,24 @@
             Debug.Log("Removed reference to XSonicNew because SonicNew is being destoyed!");
         }
 
+        [HarmonyPatch(typeof(SonicNew), "StateAfterHoming")]
+        public class SonicNew_StateAfterHoming
+        {
+            private static float CurSpeed = 0.0f;
+            public static void Prefix(SonicNew __instance)
+            {
+                CurSpeed = I.Flt["CurSpeed"];
+            }
+
+            public static void Postfix(SonicNew __instance)
+            {
+                if (XDebug.Instance.Moveset_AHMovement.Value)
+                {
+                    I.Flt["CurSpeed"] = Mathf.Min(CurSpeed, XDebug.Instance.Moveset_AHMovementMaxSpeed.Value);
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(SonicNew), "Update")]
         public class SonicNew_Update
         {
@@ -48,12 +66,12 @@
                              __instance.Get<SonicNew.State>("PlayerState").IsInList(
                                 SonicNew.State.Jump, SonicNew.State.Air,
                                 SonicNew.State.SlowFall, SonicNew.State.AfterHoming, SonicNew.State.TrickJump) ||
-                             __instance.Get<SonicNew.State>("PlayerState") == SonicNew.State.BoundAttack 
+                             __instance.Get<SonicNew.State>("PlayerState") == SonicNew.State.BoundAttack
                                 && __instance.Get<int>("BoundState") != 42;
 
                 return cond1 && cond2;
             }
-            
+
             public static void Postfix(SonicNew __instance)
             {
                 // ensure the extension code is actually attached
