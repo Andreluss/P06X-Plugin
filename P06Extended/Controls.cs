@@ -84,6 +84,12 @@ namespace P06X
             };
         }
 
+        private void FixedUpdate()
+        {
+            if (Extra_DisplaySpeedo.Value) 
+                RecalculateActualSpeed();
+        }
+
         private void Update()
         {
             if (this.CanHandleInput())
@@ -1326,23 +1332,50 @@ namespace P06X
                 this.Speedo_Container_Rect.sizeDelta = vector;
                 this.Speedo_Container_Rect.localPosition = new Vector3(0f, 0f, 0f);
             }
-            this.Speedo_GameObject.SetActive(true);
             if (XDebug.Finder<PlayerBase>.Instance)
             {
+                this.Speedo_GameObject.SetActive(true);
                 float num = X_GetActualPlayerSpeedForward();
                 float num2 = num / 100f;
                 string text = ColorUtility.ToHtmlStringRGB(new Color(2f * (1f - num2), 2f * num2, 0f));
                 string text2 = ((num <= XDebug.Cfg.Speedo.MaxDisplayableSpeed) ? num.ToString("0.00") : (XDebug.Cfg.Speedo.MaxDisplayableSpeed.ToString("0.0") + "+"));
                 this.Speedo_Text.text = string.Concat(new string[] { "Speed: <color=#", text, ">", text2, "</color>" });
-                return;
             }
-            this.Speedo_Text.text = "Speed: ---";
+            else
+            {
+                this.Speedo_GameObject.SetActive(false);
+            }
+        }
+         
+        private float ActualSpeed = 0f;
+        private static readonly int n_positions = 10;
+        private Queue<Vector3> player_prev_position = new Queue<Vector3>(n_positions);
+        private void RecalculateActualSpeed()
+        {
+            PlayerBase player = XDebug.Finder<PlayerBase>.Instance;
+            if (!player) return;
+            if (Time.fixedDeltaTime <= 0) return;
+
+            // add new position
+            player_prev_position.Enqueue(player.transform.position);
+
+            var v_distance = player.transform.position - player_prev_position.Peek();
+            // optionally (dot product): 
+            //v_distance = Vector3.Project(v_distance, player.transform.forward);
+
+            float d = v_distance.magnitude;
+            float t = Time.fixedDeltaTime * Mathf.Max(1, player_prev_position.Count - 1);
+            ActualSpeed = d / t;
+
+            // remove the n+1-th last position
+            if (player_prev_position.Count > n_positions) player_prev_position.Dequeue();
         }
 
         public float X_GetActualPlayerSpeedForward()
         {
-            PlayerBase player = XDebug.Finder<PlayerBase>.Instance;
-            return Vector3.Dot(player._Rigidbody.velocity, player.transform.forward.normalized);
+            return Mathf.Floor(ActualSpeed * 100) / 100;
+            //return Vector3.Dot(player._Rigidbody.velocity, player.transform.forward.normalized);
+            //return player._Rigidbody.velocity.magnitude;
         }
 
 
